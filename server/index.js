@@ -52,7 +52,8 @@ app.post('/api/messages', async (req, res) => {
       sessionId,
       ipAddress: getClientIp(req),
       font: font || 1, // Default to Georgia if not specified
-      sketch: sketch || 0 // Default to None if not specified
+      sketch: sketch || 0, // Default to None if not specified
+      status: 'pending'  // Explicitly set status to pending
     });
     
     await message.save();

@@ -52,7 +52,7 @@ function AdminPanel() {
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
-    navigate('/admin');
+    window.location.reload();
   };
 
   const handleAuthError = () => {

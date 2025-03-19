@@ -72,7 +72,7 @@ const FORM_STEPS = {
   SKETCH: 'sketch'
 };
 
-const bottles = [bottle1, bottle2, bottle3, bottle4, bottle5, bottle6, bottle7, bottle8];
+const bottles = [bottle1, bottle2, bottle3, bottle4, bottle5];
 
 function App() {
   return (
@@ -133,6 +133,7 @@ function MainApp() {
   });
   const [seenMessageIds] = useState(() => new Set());
   const [messageCount, setMessageCount] = useState(0);
+  const [currentRotation, setCurrentRotation] = useState(0);
   const audioRef = useRef(null);
   const unfoldingSoundsRef = useRef([
     new Audio(pageUnfolding1),
@@ -172,6 +173,9 @@ function MainApp() {
       
       // Set a random bottle style if one isn't provided
       setCurrentBottle(message.bottleStyle || Math.floor(Math.random() * 5) + 1);
+      
+      // Set a new random rotation
+      setCurrentRotation(-4 + Math.random() * 8);
 
       // Increment message count for ALL messages
       setMessageCount(prev => prev + 1);
@@ -255,7 +259,7 @@ function MainApp() {
       setAuthorLength(0);
       
       // Show post-submit message
-      setMessageSentText(getRandomMessage(NARRATIVE_MESSAGES.MESSAGE_SENT));
+      setMessageSentText(getRandomMessage(NARRATIVE_MESSAGES.MESSAGE_PENDING));
       setCurrentState(STATES.SHOW_POST_SUBMIT);
       
       // After showing the success message, fetch a new message
@@ -350,10 +354,7 @@ function MainApp() {
       
       case FORM_STEPS.MESSAGE:
         return (
-          <Box component="form" onSubmit={(e) => {
-            e.preventDefault();
-            setFormStep(FORM_STEPS.FONT);
-          }} sx={{ textAlign: 'center' }}>
+          <Box sx={{ textAlign: 'center' }}>
             <Typography variant="h4" sx={{ mb: 4, color: '#2c3e50', fontFamily: '"Playfair Display", serif' }}>
               Write Your Message
             </Typography>
@@ -362,8 +363,20 @@ function MainApp() {
               rows={4}
               fullWidth
               value={messageContent}
-              onChange={(e) => setMessageContent(e.target.value)}
+              onChange={(e) => {
+                setMessageContent(e.target.value);
+                setContentLength(e.target.value.length);
+                setShowContentHint(false); // Reset hint when typing
+              }}
+              onBlur={() => {
+                if (contentLength > 0 && contentLength < MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH) {
+                  setTimeout(() => setShowContentHint(true), 1500);
+                }
+              }}
               placeholder="Share your thoughts with the world..."
+              helperText={showContentHint && contentLength > 0 && contentLength < MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH ? 
+                `Message must be at least ${MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH} characters` :
+                `${contentLength}/${MESSAGE_CONSTRAINTS.CONTENT.MAX_LENGTH} characters`}
               sx={{
                 mb: 3,
                 '& .MuiInputBase-input': {
@@ -374,7 +387,7 @@ function MainApp() {
               }}
             />
             <Stack direction="row" spacing={2} justifyContent="center">
-              <Button variant="text" onClick={() => setFormStep(FORM_STEPS.BOTTLE)}>
+              <Button variant="text" onClick={() => setFormStep(FORM_STEPS.FONT)}>
                 Back
               </Button>
               <Button 
@@ -404,8 +417,20 @@ function MainApp() {
             <TextField
               fullWidth
               value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
+              onChange={(e) => {
+                setAuthorName(e.target.value);
+                setAuthorLength(e.target.value.length);
+                setShowAuthorHint(false); // Reset hint when typing
+              }}
+              onBlur={() => {
+                if (authorLength > 0 && authorLength < MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH) {
+                  setTimeout(() => setShowAuthorHint(true), 1500);
+                }
+              }}
               placeholder="Your name or leave blank to remain anonymous"
+              helperText={showAuthorHint && authorLength > 0 && authorLength < MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH ?
+                `Name must be at least ${MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH} characters` :
+                authorLength > 0 ? `${authorLength}/${MESSAGE_CONSTRAINTS.AUTHOR.MAX_LENGTH} characters` : 'Leave blank to remain anonymous'}
               sx={{
                 mb: 3,
                 '& .MuiInputBase-input': {
@@ -567,6 +592,11 @@ function MainApp() {
     return 'message-three-months';
   };
 
+  const getDeterministicRotation = () => {
+    // Generate a random number between -4 and 4
+    return -4 + Math.random() * 8;
+  };
+
   const getDeterministicSpots = (messageId, age) => {
     const hash = messageId.split('').reduce((acc, char) => {
       return char.charCodeAt(0) + ((acc << 5) - acc);
@@ -616,10 +646,10 @@ function MainApp() {
     
     // No smudging for new messages
     if (daysOld < 2) {
-      return text.split(' ').map((word, i) => (
+      return text.split(/\s+/).map((word, i) => (
         <React.Fragment key={i}>
           {i > 0 && ' '}
-          <span className={word.length > 30 ? 'long-word' : ''}>
+          <span style={{ display: 'inline-block' }}>
             {word}
           </span>
         </React.Fragment>
@@ -631,20 +661,20 @@ function MainApp() {
     let blurIntensity = 0;
     
     if (daysOld < 5) {
-      smudgeProbability = 0.015;  // Reduced from 0.03
-      blurIntensity = 0.2;        // Reduced from 0.3
+      smudgeProbability = 0.015;
+      blurIntensity = 0.2;
     } else if (daysOld < 9) {
-      smudgeProbability = 0.025;  // Reduced from 0.05
-      blurIntensity = 0.4;        // Reduced from 0.7
+      smudgeProbability = 0.025;
+      blurIntensity = 0.4;
     } else if (daysOld < 14) {
-      smudgeProbability = 0.04;   // Reduced from 0.08
-      blurIntensity = 0.6;        // Reduced from 1.2
+      smudgeProbability = 0.04;
+      blurIntensity = 0.6;
     } else if (daysOld < 30) {
-      smudgeProbability = 0.06;   // Reduced from 0.1
-      blurIntensity = 0.8;        // Reduced from 1.5
+      smudgeProbability = 0.06;
+      blurIntensity = 0.8;
     } else {
-      smudgeProbability = 0.08;   // Reduced from 0.15
-      blurIntensity = 1;          // Reduced from 2
+      smudgeProbability = 0.08;
+      blurIntensity = 1;
     }
 
     const getHashValue = (str, index) => {
@@ -654,36 +684,22 @@ function MainApp() {
       return (hash & 0xFFFFFFFF) / 0xFFFFFFFF;
     };
 
-    // Split text into words first, then handle characters within words
-    return text.split(' ').map((word, wordIndex) => {
-      // If word is longer than 30 characters, allow it to break
-      const wordStyle = word.length > 30 ? { wordBreak: 'break-all' } : {};
+    // Split text into words and preserve them as complete units
+    return text.split(/\s+/).map((word, wordIndex) => {
+      const shouldSmudgeWord = getHashValue(messageId, wordIndex) < smudgeProbability;
       
-      const processedWord = word.split('').map((char, charIndex) => {
-        const shouldSmudge = getHashValue(messageId, wordIndex * 100 + charIndex) < smudgeProbability;
-        
-        if (!shouldSmudge) return char;
-        
-        return (
-          <span
-            key={charIndex}
-            style={{
-              display: 'inline-block',
-              filter: `blur(${blurIntensity}px)`,
-              opacity: 0.85,  // Increased from 0.8 to make blurred text slightly more readable
-              textShadow: '0 0 1px rgba(0,0,0,0.15)',  // Reduced shadow intensity
-            }}
-          >
-            {char}
-          </span>
-        );
-      });
-
       return (
         <React.Fragment key={wordIndex}>
           {wordIndex > 0 && ' '}
-          <span style={wordStyle} className={word.length > 30 ? 'long-word' : ''}>
-            {processedWord}
+          <span style={{ 
+            display: 'inline-block',
+            ...(shouldSmudgeWord ? {
+              filter: `blur(${blurIntensity}px)`,
+              opacity: 0.85,
+              textShadow: '0 0 1px rgba(0,0,0,0.15)'
+            } : {})
+          }}>
+            {word}
           </span>
         </React.Fragment>
       );
@@ -1209,9 +1225,9 @@ function MainApp() {
               </Fade>
 
               {/* Message Display */}
-              <Fade in={currentState === STATES.SHOW_MESSAGE && currentMessage}>
+              <Fade in={Boolean(currentState === STATES.SHOW_MESSAGE && currentMessage)}>
                 <Box sx={{ width: '100%' }}>
-                  {currentMessage ? (
+                  {currentMessage && (
                     <Paper
                       elevation={3}
                       className={getMessageAgeClass(currentMessage.createdAt)}
@@ -1222,7 +1238,7 @@ function MainApp() {
                         width: '100%',
                         background: '#fff',
                         borderRadius: 2,
-                        transform: 'rotate(-1deg)',
+                        transform: `rotate(${currentRotation}deg)`,
                         '&::before': {
                           content: '""',
                           position: 'absolute',
@@ -1247,7 +1263,6 @@ function MainApp() {
                         '&.message-two-days': {
                           background: '#fffaf0',
                           border: '1px solid #e5e5e5',
-                          transform: 'rotate(-1.2deg)',
                           '&::before': {
                             background: `
                               linear-gradient(45deg, transparent 97%, #e8e8e8 100%),
@@ -1258,7 +1273,6 @@ function MainApp() {
                         '&.message-few-days': {
                           background: '#fff6e6',
                           border: '1px solid #ddd',
-                          transform: 'rotate(-1.5deg)',
                           '&::before': {
                             background: 'repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(222, 184, 135, 0.1) 12px, rgba(222, 184, 135, 0.1) 13px)',
                           },
@@ -1266,7 +1280,6 @@ function MainApp() {
                         '&.message-week-old': {
                           background: '#fff2dd',
                           border: '1px solid #ccc',
-                          transform: 'rotate(-2deg)',
                           '&::before': {
                             background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(205, 170, 125, 0.15) 10px, rgba(205, 170, 125, 0.15) 11px)',
                           },
@@ -1274,7 +1287,6 @@ function MainApp() {
                         '&.message-two-weeks': {
                           background: '#ffecd1',
                           border: '1px solid #bbb',
-                          transform: 'rotate(-2.5deg)',
                           '&::before': {
                             background: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(188, 156, 115, 0.2) 8px, rgba(188, 156, 115, 0.2) 9px)',
                           },
@@ -1282,7 +1294,6 @@ function MainApp() {
                         '&.message-three-weeks': {
                           background: '#ffe6c2',
                           border: '1px solid #aaa',
-                          transform: 'rotate(-3deg)',
                           '&::before': {
                             background: 'repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(171, 142, 105, 0.25) 6px, rgba(171, 142, 105, 0.25) 7px)',
                           },
@@ -1290,7 +1301,6 @@ function MainApp() {
                         '&.message-month-old': {
                           background: '#ffe0b3',
                           border: '1px solid #999',
-                          transform: 'rotate(-3.2deg)',
                           '&::before': {
                             background: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(171, 142, 105, 0.3) 5px, rgba(171, 142, 105, 0.3) 6px)',
                           },
@@ -1298,7 +1308,6 @@ function MainApp() {
                         '&.message-two-months': {
                           background: '#ffd9a3',
                           border: '1px solid #888',
-                          transform: 'rotate(-3.5deg)',
                           '&::before': {
                             background: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(171, 142, 105, 0.35) 4px, rgba(171, 142, 105, 0.35) 5px)',
                           },
@@ -1306,7 +1315,6 @@ function MainApp() {
                         '&.message-three-months': {
                           background: '#ffd199',
                           border: '1px solid #777',
-                          transform: 'rotate(-4deg)',
                           '&::before': {
                             background: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(171, 142, 105, 0.4) 3px, rgba(171, 142, 105, 0.4) 4px)'
                           }
@@ -1353,7 +1361,9 @@ function MainApp() {
                             fontSize: '1.25rem',
                             lineHeight: 1.6,
                             whiteSpace: 'pre-wrap',
-                            wordBreak: 'keep-all',
+                            wordBreak: 'normal',
+                            overflowWrap: 'break-word',
+                            hyphens: 'none',
                             mb: 2
                           }}
                         >
@@ -1367,19 +1377,34 @@ function MainApp() {
                             width: '100%'
                           }}
                         >
-                          <Typography
-                            variant="subtitle2"
-                            sx={{
-                              fontFamily: getFontFamily(currentMessage.font),
-                              opacity: 0.8
-                            }}
-                          >
-                            {new Date(currentMessage.createdAt).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </Typography>
+                          <Box>
+                            <Typography
+                              variant="subtitle2"
+                              sx={{
+                                fontFamily: getFontFamily(currentMessage.font),
+                                opacity: 0.8
+                              }}
+                            >
+                              {new Date(currentMessage.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </Typography>
+                            {currentMessage.sessionId === sessionId && (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  display: 'block',
+                                  fontFamily: getFontFamily(currentMessage.font),
+                                  opacity: 0.6,
+                                  mt: 0.5
+                                }}
+                              >
+                                {currentMessage.readBy?.length || 0} {currentMessage.readBy?.length === 1 ? 'person has' : 'people have'} found this message
+                              </Typography>
+                            )}
+                          </Box>
                           {currentMessage.author && currentMessage.author.trim() !== '' && (
                             <Typography
                               variant="subtitle2"
@@ -1399,7 +1424,7 @@ function MainApp() {
                         <Box
                           sx={{
                             position: 'absolute',
-                            top: '20px',
+                            bottom: '20px',
                             right: '20px',
                             width: '80px',
                             height: '80px',
@@ -1414,7 +1439,7 @@ function MainApp() {
                         />
                       )}
                     </Paper>
-                  ) : <Box />}
+                  )}
                 </Box>
               </Fade>
 
@@ -1460,7 +1485,9 @@ function MainApp() {
           </Box>
 
           {/* Continue Button */}
-          <Fade in={[STATES.SHOW_INITIAL_MESSAGE, STATES.SHOW_MESSAGE, STATES.SHOW_FAMILIAR].includes(currentState)}>
+          <Fade in={currentState === STATES.SHOW_INITIAL_MESSAGE || 
+                   currentState === STATES.SHOW_MESSAGE || 
+                   currentState === STATES.SHOW_FAMILIAR}>
             <Box sx={{ 
               position: 'relative',
               width: '100%',
