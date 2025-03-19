@@ -354,54 +354,36 @@ function MainApp() {
             <Typography variant="h4" sx={{ mb: 4, color: '#2c3e50', fontFamily: '"Playfair Display", serif' }}>
               Write Your Message
             </Typography>
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                required
-                fullWidth
-                multiline
-                rows={6}
-                label="Your Message"
-                name="content"
-                value={messageContent}
-                variant="outlined"
-                inputProps={{
-                  minLength: MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH,
-                  maxLength: MESSAGE_CONSTRAINTS.CONTENT.MAX_LENGTH
-                }}
-                onChange={(e) => {
-                  setMessageContent(e.target.value);
-                  setContentLength(e.target.value.length);
-                }}
-                error={contentLength > MESSAGE_CONSTRAINTS.CONTENT.MAX_LENGTH}
-              />
-              <Box sx={{ minHeight: '20px', mt: 1 }}>
-                <Fade in={showContentHint}>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      display: 'block', 
-                      textAlign: 'right',
-                      color: '#666',
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    Please write at least {MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH} characters
-                  </Typography>
-                </Fade>
-              </Box>
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  display: 'block', 
-                  textAlign: 'right',
-                  color: contentLength > MESSAGE_CONSTRAINTS.CONTENT.MAX_LENGTH * 0.9 ? '#e74c3c' : '#666',
-                }}
-              >
-                {contentLength}/{MESSAGE_CONSTRAINTS.CONTENT.MAX_LENGTH} characters
-              </Typography>
-            </Box>
+            <TextField
+              multiline
+              rows={4}
+              fullWidth
+              value={messageContent}
+              onChange={(e) => {
+                setMessageContent(e.target.value);
+                setContentLength(e.target.value.length);
+                setShowContentHint(false); // Reset hint when typing
+              }}
+              onBlur={() => {
+                if (contentLength > 0 && contentLength < MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH) {
+                  setTimeout(() => setShowContentHint(true), 1500);
+                }
+              }}
+              placeholder="Share your thoughts with the world..."
+              helperText={showContentHint && contentLength > 0 && contentLength < MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH ? 
+                `Message must be at least ${MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH} characters` :
+                `${contentLength}/${MESSAGE_CONSTRAINTS.CONTENT.MAX_LENGTH} characters`}
+              sx={{
+                mb: 3,
+                '& .MuiInputBase-input': {
+                  fontFamily: getFontFamily(selectedFont),
+                  fontSize: '1.25rem',
+                  lineHeight: 1.5
+                }
+              }}
+            />
             <Stack direction="row" spacing={2} justifyContent="center">
-              <Button variant="text" onClick={() => setFormStep(FORM_STEPS.BOTTLE)}>
+              <Button variant="text" onClick={() => setFormStep(FORM_STEPS.FONT)}>
                 Back
               </Button>
               <Button 
@@ -428,49 +410,32 @@ function MainApp() {
             <Typography variant="h4" sx={{ mb: 4, color: '#2c3e50', fontFamily: '"Playfair Display", serif' }}>
               Sign Your Message
             </Typography>
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                label="Your Name (Optional)"
-                name="author"
-                value={authorName}
-                variant="outlined"
-                inputProps={{
-                  minLength: MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH,
-                  maxLength: MESSAGE_CONSTRAINTS.AUTHOR.MAX_LENGTH
-                }}
-                onChange={(e) => {
-                  setAuthorName(e.target.value);
-                  setAuthorLength(e.target.value.length);
-                }}
-                error={authorLength > MESSAGE_CONSTRAINTS.AUTHOR.MAX_LENGTH}
-              />
-              <Box sx={{ minHeight: '20px', mt: 1 }}>
-                <Fade in={showAuthorHint}>
-                  <Typography 
-                    variant="caption" 
-                    sx={{ 
-                      display: 'block', 
-                      textAlign: 'right',
-                      color: '#666',
-                      fontStyle: 'italic',
-                    }}
-                  >
-                    Please write at least {MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH} characters
-                  </Typography>
-                </Fade>
-              </Box>
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  display: 'block', 
-                  textAlign: 'right',
-                  color: authorLength > MESSAGE_CONSTRAINTS.AUTHOR.MAX_LENGTH * 0.9 ? '#e74c3c' : '#666',
-                }}
-              >
-                {authorLength > 0 ? `${authorLength}/${MESSAGE_CONSTRAINTS.AUTHOR.MAX_LENGTH} characters` : "Leave blank to remain anonymous"}
-              </Typography>
-            </Box>
+            <TextField
+              fullWidth
+              value={authorName}
+              onChange={(e) => {
+                setAuthorName(e.target.value);
+                setAuthorLength(e.target.value.length);
+                setShowAuthorHint(false); // Reset hint when typing
+              }}
+              onBlur={() => {
+                if (authorLength > 0 && authorLength < MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH) {
+                  setTimeout(() => setShowAuthorHint(true), 1500);
+                }
+              }}
+              placeholder="Your name or leave blank to remain anonymous"
+              helperText={showAuthorHint && authorLength > 0 && authorLength < MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH ?
+                `Name must be at least ${MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH} characters` :
+                authorLength > 0 ? `${authorLength}/${MESSAGE_CONSTRAINTS.AUTHOR.MAX_LENGTH} characters` : 'Leave blank to remain anonymous'}
+              sx={{
+                mb: 3,
+                '& .MuiInputBase-input': {
+                  fontFamily: getFontFamily(selectedFont),
+                  fontSize: '1.25rem',
+                  textAlign: 'center'
+                }
+              }}
+            />
             <Stack direction="row" spacing={2} justifyContent="center">
               <Button variant="text" onClick={() => setFormStep(FORM_STEPS.MESSAGE)}>
                 Back
@@ -608,39 +573,6 @@ function MainApp() {
     }
   };
 
-  const getDeterministicSpots = (messageId, age) => {
-    const hash = messageId.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0);
-    
-    const spots = [];
-    const numSpots = Math.floor((age / 30) * 20) + 3; // Increased base number of spots
-    
-    // Define an array of algae colors with varying opacity ranges
-    const algaeColors = [
-      { color: '144, 238, 144', opacityRange: [0.2, 0.55] }, // Light green
-      { color: '34, 139, 34', opacityRange: [0.15, 0.4] },   // Forest green
-      { color: '154, 205, 50', opacityRange: [0.18, 0.45] }, // Yellow-green
-      { color: '85, 107, 47', opacityRange: [0.15, 0.35] }   // Dark olive
-    ];
-    
-    for (let i = 0; i < numSpots; i++) {
-      const x = ((hash + i * 7919) % 100);
-      const y = ((hash + i * 3571) % 100);
-      const size = ((hash + i * 1237) % 4) + 2; // Size between 2-5px
-      
-      // Use hash to select color and calculate opacity
-      const colorIndex = Math.abs((hash + i * 3533) % algaeColors.length);
-      const { color, opacityRange } = algaeColors[colorIndex];
-      const opacityBase = opacityRange[0] + (age / 90) * (opacityRange[1] - opacityRange[0]);
-      const opacity = opacityBase + ((hash + i * 2741) % 20) / 100; // Add slight random variation
-      
-      spots.push(`radial-gradient(${size}px ${size}px at ${x}% ${y}%, rgba(${color}, ${opacity}) 0%, transparent 100%)`);
-    }
-    
-    return spots.join(',\n');
-  };
-
   const getMessageAgeClass = (createdAt) => {
     const daysOld = differenceInDays(new Date(), new Date(createdAt));
     
@@ -654,6 +586,50 @@ function MainApp() {
     if (daysOld < 34) return 'message-month-old';
     if (daysOld < 55) return 'message-two-months';
     return 'message-three-months';
+  };
+
+  const getDeterministicSpots = (messageId, age) => {
+    const hash = messageId.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    const numSpots = Math.floor((age / 30) * 20) + 3;
+    const spots = [];
+    
+    // Define an array of algae colors
+    const algaeColors = [
+      { color: 'rgb(144, 238, 144)', opacity: [0.2, 0.4] },  // Light green
+      { color: 'rgb(34, 139, 34)', opacity: [0.15, 0.35] },  // Forest green
+      { color: 'rgb(154, 205, 50)', opacity: [0.18, 0.38] }, // Yellow-green
+      { color: 'rgb(85, 107, 47)', opacity: [0.15, 0.3] }    // Dark olive
+    ];
+    
+    for (let i = 0; i < numSpots; i++) {
+      const x = 5 + (Math.abs((hash + i * 7919)) % 90);
+      const y = 5 + (Math.abs((hash + i * 3571)) % 90);
+      
+      // Simplified size calculation - direct range from 3 to 7 pixels
+      const size = 3 + (Math.abs((hash + i * 1237)) % 5);
+      
+      // Select color and calculate opacity within its range
+      const colorIndex = Math.abs((hash + i * 3533) % algaeColors.length);
+      const { color, opacity: opacityRange } = algaeColors[colorIndex];
+      const opacity = opacityRange[0] + (Math.abs((hash + i * 2741) % 100) / 100) * (opacityRange[1] - opacityRange[0]);
+      
+      // Calculate blur radius between 0.5px and 1.5px
+      const blur = 0.5 + (Math.abs((hash + i * 1619) % 100) / 100);
+      
+      spots.push({
+        x,
+        y,
+        size,
+        color,
+        opacity,
+        blur
+      });
+    }
+    
+    return spots;
   };
 
   const getSmudgedText = (text, createdAt, messageId) => {
@@ -676,20 +652,20 @@ function MainApp() {
     let blurIntensity = 0;
     
     if (daysOld < 5) {
-      smudgeProbability = 0.03;
-      blurIntensity = 0.3; // Reduced from 0.5
+      smudgeProbability = 0.015;  // Reduced from 0.03
+      blurIntensity = 0.2;        // Reduced from 0.3
     } else if (daysOld < 9) {
-      smudgeProbability = 0.05;
-      blurIntensity = 0.7; // Reduced from 1
+      smudgeProbability = 0.025;  // Reduced from 0.05
+      blurIntensity = 0.4;        // Reduced from 0.7
     } else if (daysOld < 14) {
-      smudgeProbability = 0.08;
-      blurIntensity = 1.2; // Reduced from 1.5
+      smudgeProbability = 0.04;   // Reduced from 0.08
+      blurIntensity = 0.6;        // Reduced from 1.2
     } else if (daysOld < 30) {
-      smudgeProbability = 0.1;
-      blurIntensity = 1.5; // Reduced from 2
+      smudgeProbability = 0.06;   // Reduced from 0.1
+      blurIntensity = 0.8;        // Reduced from 1.5
     } else {
-      smudgeProbability = 0.15;
-      blurIntensity = 2; // Reduced from 2.5
+      smudgeProbability = 0.08;   // Reduced from 0.15
+      blurIntensity = 1;          // Reduced from 2
     }
 
     const getHashValue = (str, index) => {
@@ -715,8 +691,8 @@ function MainApp() {
             style={{
               display: 'inline-block',
               filter: `blur(${blurIntensity}px)`,
-              opacity: 0.8,
-              textShadow: '0 0 1px rgba(0,0,0,0.2)',
+              opacity: 0.85,  // Increased from 0.8 to make blurred text slightly more readable
+              textShadow: '0 0 1px rgba(0,0,0,0.15)',  // Reduced shadow intensity
             }}
           >
             {char}
@@ -733,6 +709,18 @@ function MainApp() {
         </React.Fragment>
       );
     });
+  };
+
+  const getFontFamily = (fontId) => {
+    
+    // If fontId is undefined or null, return default font
+    if (!fontId) {
+      return FONTS[0].family;
+    }
+    
+    // Find the font by ID
+    const font = FONTS.find(f => f.id === Number(fontId));
+    return font ? font.family : FONTS[0].family;
   };
 
   useEffect(() => {
@@ -1256,20 +1244,16 @@ function MainApp() {
                         background: '#fff',
                         borderRadius: 2,
                         transform: 'rotate(-1deg)',
-                        '&::after': currentMessage.sketch ? {
+                        '&::before': {
                           content: '""',
                           position: 'absolute',
-                          top: '20px',
-                          right: '20px',
-                          width: '80px',
-                          height: '80px',
-                          opacity: 0.15,
-                          backgroundImage: `url(${SKETCHES[currentMessage.sketch].icon})`,
-                          backgroundSize: 'contain',
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'center',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
                           pointerEvents: 'none',
-                        } : {},
+                          zIndex: 0,
+                        },
                         '&.message-new': {
                           background: '#fff',
                           border: '1px solid #e0e0e0',
@@ -1278,14 +1262,7 @@ function MainApp() {
                           background: '#fffdf5',
                           border: '1px solid #e0e0e0',
                           '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
                             background: 'linear-gradient(45deg, transparent 98%, #f0f0f0 100%)',
-                            pointerEvents: 'none',
                           },
                         },
                         '&.message-two-days': {
@@ -1293,17 +1270,10 @@ function MainApp() {
                           border: '1px solid #e5e5e5',
                           transform: 'rotate(-1.2deg)',
                           '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
                             background: `
                               linear-gradient(45deg, transparent 97%, #e8e8e8 100%),
                               linear-gradient(-45deg, transparent 97%, #e8e8e8 100%)
                             `,
-                            pointerEvents: 'none',
                           },
                         },
                         '&.message-few-days': {
@@ -1311,17 +1281,7 @@ function MainApp() {
                           border: '1px solid #ddd',
                           transform: 'rotate(-1.5deg)',
                           '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: `
-                              repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(222, 184, 135, 0.1) 12px, rgba(222, 184, 135, 0.1) 13px),
-                              ${getDeterministicSpots(currentMessage._id, 5)}
-                            `,
-                            pointerEvents: 'none',
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(222, 184, 135, 0.1) 12px, rgba(222, 184, 135, 0.1) 13px)',
                           },
                         },
                         '&.message-week-old': {
@@ -1329,17 +1289,7 @@ function MainApp() {
                           border: '1px solid #ccc',
                           transform: 'rotate(-2deg)',
                           '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: `
-                              repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(205, 170, 125, 0.15) 10px, rgba(205, 170, 125, 0.15) 11px),
-                              ${getDeterministicSpots(currentMessage._id, 8)}
-                            `,
-                            pointerEvents: 'none',
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(205, 170, 125, 0.15) 10px, rgba(205, 170, 125, 0.15) 11px)',
                           },
                         },
                         '&.message-two-weeks': {
@@ -1347,17 +1297,7 @@ function MainApp() {
                           border: '1px solid #bbb',
                           transform: 'rotate(-2.5deg)',
                           '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: `
-                              repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(188, 156, 115, 0.2) 8px, rgba(188, 156, 115, 0.2) 9px),
-                              ${getDeterministicSpots(currentMessage._id, 13)}
-                            `,
-                            pointerEvents: 'none',
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(188, 156, 115, 0.2) 8px, rgba(188, 156, 115, 0.2) 9px)',
                           },
                         },
                         '&.message-three-weeks': {
@@ -1365,17 +1305,7 @@ function MainApp() {
                           border: '1px solid #aaa',
                           transform: 'rotate(-3deg)',
                           '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: `
-                              repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(171, 142, 105, 0.25) 6px, rgba(171, 142, 105, 0.25) 7px),
-                              ${getDeterministicSpots(currentMessage._id, 21)}
-                            `,
-                            pointerEvents: 'none',
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(171, 142, 105, 0.25) 6px, rgba(171, 142, 105, 0.25) 7px)',
                           },
                         },
                         '&.message-month-old': {
@@ -1383,17 +1313,7 @@ function MainApp() {
                           border: '1px solid #999',
                           transform: 'rotate(-3.2deg)',
                           '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: `
-                              repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(171, 142, 105, 0.3) 5px, rgba(171, 142, 105, 0.3) 6px),
-                              ${getDeterministicSpots(currentMessage._id, 34)}
-                            `,
-                            pointerEvents: 'none',
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(171, 142, 105, 0.3) 5px, rgba(171, 142, 105, 0.3) 6px)',
                           },
                         },
                         '&.message-two-months': {
@@ -1401,17 +1321,7 @@ function MainApp() {
                           border: '1px solid #888',
                           transform: 'rotate(-3.5deg)',
                           '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: `
-                              repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(171, 142, 105, 0.35) 4px, rgba(171, 142, 105, 0.35) 5px),
-                              ${getDeterministicSpots(currentMessage._id, 55)}
-                            `,
-                            pointerEvents: 'none',
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(171, 142, 105, 0.35) 4px, rgba(171, 142, 105, 0.35) 5px)',
                           },
                         },
                         '&.message-three-months': {
@@ -1419,82 +1329,110 @@ function MainApp() {
                           border: '1px solid #777',
                           transform: 'rotate(-4deg)',
                           '&::before': {
-                            content: '""',
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: `
-                              repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(171, 142, 105, 0.4) 3px, rgba(171, 142, 105, 0.4) 4px),
-                              ${getDeterministicSpots(currentMessage._id, 90)}
-                            `,
-                            pointerEvents: 'none',
-                          },
-                        },
+                            background: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(171, 142, 105, 0.4) 3px, rgba(171, 142, 105, 0.4) 4px)'
+                          }
+                        }
                       }}
                       onClick={handleMessageClose}
                     >
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          whiteSpace: 'pre-wrap',
-                          wordBreak: 'keep-all',
-                          overflowWrap: 'normal',
-                          hyphens: 'none',
-                          mb: 2,
-                          fontFamily: currentMessage.font ? FONTS[currentMessage.font - 1].family : '"Georgia", serif',
-                          fontSize: DISPLAY_SETTINGS.MESSAGE.FONT_SIZE,
-                          lineHeight: DISPLAY_SETTINGS.MESSAGE.LINE_HEIGHT,
-                          '& span': {
-                            wordBreak: 'normal',
-                            overflowWrap: 'break-word',
-                            '&.long-word': {
-                              wordBreak: 'break-all'
-                            }
-                          }
-                        }}
-                      >
-                        {getSmudgedText(currentMessage.content, currentMessage.createdAt, currentMessage._id)}
-                      </Typography>
+                      {/* Algae Spots Layer */}
+                      {currentMessage && differenceInDays(new Date(), new Date(currentMessage.createdAt)) >= 3 && (
+                        <>
+                          {getDeterministicSpots(currentMessage._id, differenceInDays(new Date(), new Date(currentMessage.createdAt))).map((spot, index) => (
+                            <Box
+                              key={index}
+                              sx={{
+                                position: 'absolute',
+                                top: `${spot.y}%`,
+                                left: `${spot.x}%`,
+                                width: `${spot.size}px`,
+                                height: `${spot.size}px`,
+                                backgroundColor: spot.color,
+                                opacity: spot.opacity,
+                                borderRadius: '50%',
+                                filter: `blur(${spot.blur}px)`,
+                                pointerEvents: 'none',
+                                zIndex: 1,
+                                transform: 'translate(-50%, -50%)'
+                              }}
+                            />
+                          ))}
+                        </>
+                      )}
+                      {/* Content Layer */}
                       <Box
                         sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          color: '#666',
+                          position: 'relative',
+                          zIndex: 2,
+                          width: '100%'
                         }}
                       >
-                        <Typography 
-                          variant="subtitle2" 
-                          sx={{ 
-                            fontStyle: 'italic',
-                            overflowWrap: 'break-word',
-                            maxWidth: '70%',
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            fontFamily: getFontFamily(currentMessage.font),
+                            fontSize: '1.25rem',
+                            lineHeight: 1.6,
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'keep-all',
+                            mb: 2
                           }}
                         >
-                          — {currentMessage.author}
+                          {getSmudgedText(currentMessage.content, currentMessage.createdAt, currentMessage._id)}
                         </Typography>
-                        <Typography variant="caption">
-                          {new Date(currentMessage.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </Typography>
+                        <Box 
+                          sx={{ 
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-end',
+                            width: '100%'
+                          }}
+                        >
+                          <Typography
+                            variant="subtitle2"
+                            sx={{
+                              fontFamily: getFontFamily(currentMessage.font),
+                              opacity: 0.8
+                            }}
+                          >
+                            {new Date(currentMessage.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </Typography>
+                          {currentMessage.author && currentMessage.author.trim() !== '' && (
+                            <Typography
+                              variant="subtitle2"
+                              sx={{
+                                fontFamily: getFontFamily(currentMessage.font),
+                                fontStyle: 'italic',
+                                opacity: 0.8
+                              }}
+                            >
+                              - {currentMessage.author}
+                            </Typography>
+                          )}
+                        </Box>
                       </Box>
-                      {currentMessage.sessionId === sessionId && (
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            display: 'block',
-                            textAlign: 'right',
-                            color: '#999',
-                            mt: 1
+                      {/* Sketch Layer */}
+                      {currentMessage.sketch && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            bottom: '20px',
+                            right: '20px',
+                            width: '80px',
+                            height: '80px',
+                            opacity: 0.15,
+                            backgroundImage: `url(${SKETCHES[currentMessage.sketch].icon})`,
+                            backgroundSize: 'contain',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: 'center',
+                            pointerEvents: 'none',
+                            zIndex: 2,
                           }}
-                        >
-                          {currentMessage.readBy?.length || 0} {currentMessage.readBy?.length === 1 ? 'person has' : 'people have'} read this message
-                        </Typography>
+                        />
                       )}
                     </Paper>
                   ) : <Box />}
@@ -1543,7 +1481,9 @@ function MainApp() {
           </Box>
 
           {/* Continue Button */}
-          <Fade in={[STATES.SHOW_INITIAL_MESSAGE, STATES.SHOW_MESSAGE, STATES.SHOW_FAMILIAR].includes(currentState)}>
+          <Fade in={currentState === STATES.SHOW_INITIAL_MESSAGE || 
+                   currentState === STATES.SHOW_MESSAGE || 
+                   currentState === STATES.SHOW_FAMILIAR}>
             <Box sx={{ 
               position: 'relative',
               width: '100%',
@@ -1556,6 +1496,8 @@ function MainApp() {
                 sx={{
                   background: '#3498db',
                   '&:hover': { background: '#2980b9' },
+                  fontSize: '1.1rem',
+                  padding: '8px 24px',
                 }}
               >
                 {currentState === STATES.SHOW_MESSAGE ? 

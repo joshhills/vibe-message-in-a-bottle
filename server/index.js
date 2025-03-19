@@ -31,7 +31,7 @@ app.use('/api/auth', authRoutes);
 // Public routes
 app.post('/api/messages', async (req, res) => {
   try {
-    const { content, author, bottleStyle, sessionId } = req.body;
+    const { content, author, bottleStyle, sessionId, font, sketch } = req.body;
     
     if (!sessionId) {
       return res.status(400).json({ error: 'Session ID is required' });
@@ -50,7 +50,9 @@ app.post('/api/messages', async (req, res) => {
       author, 
       bottleStyle,
       sessionId,
-      ipAddress: getClientIp(req)
+      ipAddress: getClientIp(req),
+      font: font || 1, // Default to Georgia if not specified
+      sketch: sketch || 0 // Default to None if not specified
     });
     
     await message.save();
@@ -83,7 +85,7 @@ app.get('/api/messages/random', async (req, res) => {
         status: 'approved',
         sessionId: sessionId,
         ...(excludeMessageId && excludeMessageId !== 'null' ? { _id: { $ne: excludeMessageId } } : {})
-      });
+      }).select('-ipAddress');
 
       if (userMessage) {
         // Only add to readBy if not already there
@@ -107,7 +109,7 @@ app.get('/api/messages/random', async (req, res) => {
       ...baseQuery,
       readBy: { $size: 0 },
       sessionId: { $ne: sessionId }
-    });
+    }).select('-ipAddress'); // Exclude ipAddress but include all other fields
 
     if (unreadMessages.length > 0) {
       const randomMessage = unreadMessages[Math.floor(Math.random() * unreadMessages.length)];
@@ -124,7 +126,7 @@ app.get('/api/messages/random', async (req, res) => {
       ...baseQuery,
       readBy: { $ne: sessionId },
       sessionId: { $ne: sessionId }
-    });
+    }).select('-ipAddress'); // Exclude ipAddress but include all other fields
 
     if (sessionUnreadMessages.length > 0) {
       const randomMessage = sessionUnreadMessages[Math.floor(Math.random() * sessionUnreadMessages.length)];
@@ -140,7 +142,7 @@ app.get('/api/messages/random', async (req, res) => {
     const allOtherMessages = await Message.find({
       ...baseQuery,
       sessionId: { $ne: sessionId }
-    });
+    }).select('-ipAddress'); // Exclude ipAddress but include all other fields
 
     if (allOtherMessages.length > 0) {
       // Calculate weights based on read counts
@@ -184,7 +186,7 @@ app.get('/api/messages/random', async (req, res) => {
     const userMessage = await Message.findOne({
       ...baseQuery,
       sessionId: sessionId
-    });
+    }).select('-ipAddress');
 
     if (userMessage) {
       // Only add to readBy if not already there
@@ -206,6 +208,7 @@ app.get('/api/messages/random', async (req, res) => {
 app.get('/api/admin/messages/pending', auth, async (req, res) => {
   try {
     const messages = await Message.find({ status: 'pending' })
+      .select('-ipAddress')
       .sort({ createdAt: 1 });
     res.json(messages);
   } catch (error) {
@@ -227,7 +230,7 @@ app.post('/api/admin/messages/:id/moderate', auth, async (req, res) => {
       id,
       { status },
       { new: true }
-    );
+    ).select('-ipAddress');
     
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
@@ -245,7 +248,7 @@ app.delete('/api/admin/messages/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const message = await Message.findByIdAndDelete(id);
+    const message = await Message.findByIdAndDelete(id).select('-ipAddress');
     
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
@@ -262,6 +265,7 @@ app.delete('/api/admin/messages/:id', auth, async (req, res) => {
 app.get('/api/admin/messages', auth, async (req, res) => {
   try {
     const messages = await Message.find()
+      .select('-ipAddress')
       .sort({ createdAt: -1 }); // Sort by newest first
     res.json(messages);
   } catch (error) {

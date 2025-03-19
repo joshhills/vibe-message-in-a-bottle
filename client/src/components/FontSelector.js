@@ -2,17 +2,17 @@ import React from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 
 const FONTS = [
-  { id: 1, name: 'Georgia', family: '"Georgia", serif' },
-  { id: 2, name: 'Playfair Display', family: '"Playfair Display", serif' },
-  { id: 3, name: 'Crimson Text', family: '"Crimson Text", serif' },
-  { id: 4, name: 'Lora', family: '"Lora", serif' }
+  { id: 1, name: 'Classic', family: '"Georgia", serif' },
+  { id: 2, name: 'Modern', family: '"Roboto", sans-serif' },
+  { id: 3, name: 'Typewriter', family: '"JetBrains Mono", monospace' },
+  { id: 4, name: 'Handwritten', family: '"Indie Flower", cursive' }
 ];
 
-const FontSelector = ({ selectedFont, onSelect, previewText }) => {
+const FontSelector = ({ selectedFont, onSelect, previewText = "The waves whisper ancient secrets..." }) => {
   return (
     <Grid container spacing={2}>
       {FONTS.map((font) => (
-        <Grid item xs={12} sm={6} key={font.id}>
+        <Grid item xs={6} sm={6} key={font.id}>
           <Paper
             elevation={selectedFont === font.id ? 8 : 2}
             sx={{
@@ -28,11 +28,11 @@ const FontSelector = ({ selectedFont, onSelect, previewText }) => {
             onClick={() => onSelect(font.id)}
           >
             <Typography
-              variant="h6"
+              variant="subtitle1"
               sx={{
-                mb: 1,
-                fontFamily: font.family,
-                color: selectedFont === font.id ? '#3498db' : 'inherit'
+                textAlign: 'center',
+                color: selectedFont === font.id ? '#3498db' : 'inherit',
+                mb: 1
               }}
             >
               {font.name}
@@ -40,11 +40,12 @@ const FontSelector = ({ selectedFont, onSelect, previewText }) => {
             <Typography
               sx={{
                 fontFamily: font.family,
+                textAlign: 'center',
                 fontSize: '1.1rem',
-                color: '#666'
+                lineHeight: 1.5
               }}
             >
-              {previewText || "The waves whisper ancient tales of distant shores..."}
+              {previewText}
             </Typography>
           </Paper>
         </Grid>

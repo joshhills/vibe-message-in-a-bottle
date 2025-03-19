@@ -211,7 +211,7 @@ function AdminPanel() {
       {/* Pending Messages Section */}
       <Paper sx={{ p: 3, mb: 4 }}>
         <Typography variant="h5" gutterBottom>
-          Pending Messages
+          Pending Messages ({pendingMessages.length})
         </Typography>
         <TableContainer>
           <Table>
@@ -269,7 +269,7 @@ function AdminPanel() {
       {/* All Messages Section */}
       <Paper sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
-          All Messages
+          All Messages ({allMessages.length})
         </Typography>
         <TableContainer>
           <Table>

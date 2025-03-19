@@ -1,16 +1,18 @@
 import React from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import heart from '../assets/sketches/heart.svg';
-import cat from '../assets/sketches/cat.svg';
-import crown from '../assets/sketches/crown.svg';
+import creature from '../assets/sketches/cat.svg';
+import sword from '../assets/sketches/sword.svg';
 import balloon from '../assets/sketches/balloon.svg';
+import star from '../assets/sketches/star.svg';
 
 const SKETCHES = [
   { id: 0, name: 'None', icon: null },
   { id: 1, name: 'Heart', icon: heart },
-  { id: 2, name: 'Cat', icon: cat },
-  { id: 3, name: 'Crown', icon: crown },
-  { id: 4, name: 'Balloon', icon: balloon }
+  { id: 2, name: 'Creature', icon: creature },
+  { id: 3, name: 'Sword', icon: sword },
+  { id: 4, name: 'Balloon', icon: balloon },
+  { id: 5, name: 'Star', icon: star }
 ];
 
 const SketchSelector = ({ selectedSketch, onSelect }) => {
