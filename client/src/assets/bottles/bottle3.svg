@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="60" height="120" viewBox="0 0 60 120" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <path d="M26 8
+           C26 6, 34 6, 34 8
+           L34 25
+           C34 25, 38 27, 38 30
+           L38 110
+           C38 114, 22 114, 22 110
+           L22 30
+           C22 27, 26 25, 26 25
+           Z" 
+        fill="#1a472a" 
+        stroke="#0d3319" 
+        stroke-width="1"/>
+  
+  <!-- Bottle cap rim -->
+  <path d="M24 8
+           C24 5, 36 5, 36 8
+           C36 9, 34 9, 34 10
+           L34 12
+           C34 13, 26 13, 26 12
+           L26 10
+           C26 9, 24 9, 24 8
+           Z"
+        fill="#1a472a"
+        stroke="#0d3319"
+        stroke-width="1"/>
+</svg> 

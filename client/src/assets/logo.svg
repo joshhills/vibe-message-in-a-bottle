@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="80" viewBox="0 0 200 80" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&amp;display=swap');
+  </style>
+  <rect width="200" height="80" fill="none"/>
+  <text x="100" y="50" 
+        font-family="Montserrat, sans-serif" 
+        font-size="40" 
+        font-weight="700" 
+        fill="#2c3e50" 
+        text-anchor="middle" 
+        dominant-baseline="middle">
+    VIBE
+  </text>
+</svg> 
