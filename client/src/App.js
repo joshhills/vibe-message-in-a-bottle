@@ -72,7 +72,7 @@ const FORM_STEPS = {
   SKETCH: 'sketch'
 };
 
-const bottles = [bottle1, bottle2, bottle3, bottle4, bottle5];
+const bottles = [bottle1, bottle2, bottle3, bottle4, bottle5, bottle6, bottle7, bottle8];
 
 function App() {
   return (
@@ -350,7 +350,10 @@ function MainApp() {
       
       case FORM_STEPS.MESSAGE:
         return (
-          <Box sx={{ textAlign: 'center' }}>
+          <Box component="form" onSubmit={(e) => {
+            e.preventDefault();
+            setFormStep(FORM_STEPS.FONT);
+          }} sx={{ textAlign: 'center' }}>
             <Typography variant="h4" sx={{ mb: 4, color: '#2c3e50', fontFamily: '"Playfair Display", serif' }}>
               Write Your Message
             </Typography>
@@ -359,20 +362,8 @@ function MainApp() {
               rows={4}
               fullWidth
               value={messageContent}
-              onChange={(e) => {
-                setMessageContent(e.target.value);
-                setContentLength(e.target.value.length);
-                setShowContentHint(false); // Reset hint when typing
-              }}
-              onBlur={() => {
-                if (contentLength > 0 && contentLength < MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH) {
-                  setTimeout(() => setShowContentHint(true), 1500);
-                }
-              }}
+              onChange={(e) => setMessageContent(e.target.value)}
               placeholder="Share your thoughts with the world..."
-              helperText={showContentHint && contentLength > 0 && contentLength < MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH ? 
-                `Message must be at least ${MESSAGE_CONSTRAINTS.CONTENT.MIN_LENGTH} characters` :
-                `${contentLength}/${MESSAGE_CONSTRAINTS.CONTENT.MAX_LENGTH} characters`}
               sx={{
                 mb: 3,
                 '& .MuiInputBase-input': {
@@ -383,7 +374,7 @@ function MainApp() {
               }}
             />
             <Stack direction="row" spacing={2} justifyContent="center">
-              <Button variant="text" onClick={() => setFormStep(FORM_STEPS.FONT)}>
+              <Button variant="text" onClick={() => setFormStep(FORM_STEPS.BOTTLE)}>
                 Back
               </Button>
               <Button 
@@ -413,20 +404,8 @@ function MainApp() {
             <TextField
               fullWidth
               value={authorName}
-              onChange={(e) => {
-                setAuthorName(e.target.value);
-                setAuthorLength(e.target.value.length);
-                setShowAuthorHint(false); // Reset hint when typing
-              }}
-              onBlur={() => {
-                if (authorLength > 0 && authorLength < MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH) {
-                  setTimeout(() => setShowAuthorHint(true), 1500);
-                }
-              }}
+              onChange={(e) => setAuthorName(e.target.value)}
               placeholder="Your name or leave blank to remain anonymous"
-              helperText={showAuthorHint && authorLength > 0 && authorLength < MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH ?
-                `Name must be at least ${MESSAGE_CONSTRAINTS.AUTHOR.MIN_LENGTH} characters` :
-                authorLength > 0 ? `${authorLength}/${MESSAGE_CONSTRAINTS.AUTHOR.MAX_LENGTH} characters` : 'Leave blank to remain anonymous'}
               sx={{
                 mb: 3,
                 '& .MuiInputBase-input': {
@@ -1420,7 +1399,7 @@ function MainApp() {
                         <Box
                           sx={{
                             position: 'absolute',
-                            bottom: '20px',
+                            top: '20px',
                             right: '20px',
                             width: '80px',
                             height: '80px',
@@ -1481,9 +1460,7 @@ function MainApp() {
           </Box>
 
           {/* Continue Button */}
-          <Fade in={currentState === STATES.SHOW_INITIAL_MESSAGE || 
-                   currentState === STATES.SHOW_MESSAGE || 
-                   currentState === STATES.SHOW_FAMILIAR}>
+          <Fade in={[STATES.SHOW_INITIAL_MESSAGE, STATES.SHOW_MESSAGE, STATES.SHOW_FAMILIAR].includes(currentState)}>
             <Box sx={{ 
               position: 'relative',
               width: '100%',

@@ -19,12 +19,6 @@ export const NARRATIVE_MESSAGES = {
     "Your story joins the ocean's collection of secrets.",
     "The waves carry your message to new horizons."
   ],
-  MESSAGE_PENDING: [
-    "Your message awaits the tide's approval.",
-    "The ocean holds your words, waiting for the right moment.",
-    "Your bottle floats in the currents, awaiting its journey.",
-    "The waves will carry your message when the time is right."
-  ],
   WRITE_FORM_TITLE: "Cast Your Message to the Sea",
   WRITE_FORM_NAME_PLACEHOLDER: "Your name or pseudonym",
   WRITE_FORM_MESSAGE_PLACEHOLDER: "Write your message here...",
