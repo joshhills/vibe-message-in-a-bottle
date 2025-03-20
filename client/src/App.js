@@ -226,9 +226,7 @@ function MainApp() {
   };
 
   const handleSkipMessage = () => {
-    // Set hasSubmitted and prepare next bottle
-    setHasSubmitted(true);
-    localStorage.setItem('hasSubmitted', 'true');
+    // Just prepare next bottle without setting hasSubmitted
     const nextBottle = Math.floor(Math.random() * 5) + 1;
     setCurrentBottle(nextBottle);
     setNewMessageAppearsText(getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS));
@@ -388,6 +386,9 @@ function MainApp() {
                   fontFamily: getFontFamily(selectedFont),
                   fontSize: '1.25rem',
                   lineHeight: 1.5
+                },
+                '& .MuiFormHelperText-root': {
+                  fontFamily: 'Roboto, sans-serif' // Keep helper text in standard font
                 }
               }}
             />
@@ -442,6 +443,9 @@ function MainApp() {
                   fontFamily: getFontFamily(selectedFont),
                   fontSize: '1.25rem',
                   textAlign: 'center'
+                },
+                '& .MuiFormHelperText-root': {
+                  fontFamily: 'Roboto, sans-serif' // Keep helper text in standard font
                 }
               }}
             />

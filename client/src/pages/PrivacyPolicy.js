@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Box, Link } from '@mui/material';
+import { Container, Typography, Box, Link, List, ListItem, ListItemText } from '@mui/material';
 
 function PrivacyPolicy() {
   return (
@@ -14,28 +14,44 @@ function PrivacyPolicy() {
 
       <Box sx={{ mb: 4 }}>
         <Typography variant="body1" paragraph>
-          At VIBE Coast, we take your privacy seriously. This policy outlines how we handle your personal information:
+          Privacy is a serious thing. This policy outlines how we handle your personal information:
         </Typography>
 
         <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
           Information We Store
         </Typography>
-        <Typography variant="body1" paragraph>
-          - Session IDs to track message ownership and prevent duplicate submissions
-          - IP addresses for message moderation purposes
-          - Message content and author names as provided by users
-          - Message read counts and reader tracking
-        </Typography>
+        <List sx={{ pl: 2, '& .MuiListItem-root': { display: 'list-item' } }}>
+          <ListItem>
+            <ListItemText primary="Session IDs to track message ownership and prevent duplicate submissions" />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary="IP addresses for message moderation purposes" />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary="Message content and author names as provided by users" />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary="Message read counts and reader tracking" />
+          </ListItem>
+        </List>
 
         <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
           How We Use Your Information
         </Typography>
-        <Typography variant="body1" paragraph>
-          - To prevent spam and abuse
-          - To track message readership
-          - To ensure each user can only submit one message
-          - To allow users to see how many people have read their messages
-        </Typography>
+        <List sx={{ pl: 2, '& .MuiListItem-root': { display: 'list-item' } }}>
+          <ListItem>
+            <ListItemText primary="To prevent spam and abuse" />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary="To track message readership" />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary="To ensure each user can only submit one message" />
+          </ListItem>
+          <ListItem>
+            <ListItemText primary="To allow users to see how many people have read their messages" />
+          </ListItem>
+        </List>
 
         <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
           Your Rights
