@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Container, Box, Typography, Paper, Fade, Button, TextField, Stack, IconButton } from '@mui/material';
@@ -24,12 +24,17 @@ import bottleClink3 from './assets/bottle-clink-3.mp3';
 import bottleClink4 from './assets/bottle-clink-4.mp3';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Footer from './components/Footer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import { differenceInDays } from 'date-fns';
 import FontSelector, { FONTS } from './components/FontSelector';
 import SketchSelector, { SKETCHES } from './components/SketchSelector';
+import AdminPanel from './components/AdminPanel';
+import MessageForm from './components/MessageForm';
+import { getFontFamily } from './utils/fontUtils';
+import { getSmudgedText } from './utils/textUtils';
+import { getDeterministicSpots } from './utils/spotUtils';
 
 const theme = createTheme({
   palette: {
@@ -49,7 +54,7 @@ const theme = createTheme({
   },
 });
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3011';
 
 const STATES = {
   LOADING: 'loading',
@@ -175,7 +180,7 @@ function MainApp() {
       setCurrentBottle(message.bottleStyle || Math.floor(Math.random() * 5) + 1);
       
       // Set a new random rotation
-      setCurrentRotation(-4 + Math.random() * 8);
+      setCurrentRotation(Math.random() * 8 - 4);
 
       // Increment message count for ALL messages
       setMessageCount(prev => prev + 1);
@@ -590,132 +595,6 @@ function MainApp() {
     if (daysOld < 34) return 'message-month-old';
     if (daysOld < 55) return 'message-two-months';
     return 'message-three-months';
-  };
-
-  const getDeterministicRotation = () => {
-    // Generate a random number between -4 and 4
-    return -4 + Math.random() * 8;
-  };
-
-  const getDeterministicSpots = (messageId, age) => {
-    const hash = messageId.split('').reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc);
-    }, 0);
-    
-    const numSpots = Math.floor((age / 30) * 20) + 3;
-    const spots = [];
-    
-    // Define an array of algae colors
-    const algaeColors = [
-      { color: 'rgb(144, 238, 144)', opacity: [0.2, 0.4] },  // Light green
-      { color: 'rgb(34, 139, 34)', opacity: [0.15, 0.35] },  // Forest green
-      { color: 'rgb(154, 205, 50)', opacity: [0.18, 0.38] }, // Yellow-green
-      { color: 'rgb(85, 107, 47)', opacity: [0.15, 0.3] }    // Dark olive
-    ];
-    
-    for (let i = 0; i < numSpots; i++) {
-      const x = 5 + (Math.abs((hash + i * 7919)) % 90);
-      const y = 5 + (Math.abs((hash + i * 3571)) % 90);
-      
-      // Simplified size calculation - direct range from 3 to 7 pixels
-      const size = 3 + (Math.abs((hash + i * 1237)) % 5);
-      
-      // Select color and calculate opacity within its range
-      const colorIndex = Math.abs((hash + i * 3533) % algaeColors.length);
-      const { color, opacity: opacityRange } = algaeColors[colorIndex];
-      const opacity = opacityRange[0] + (Math.abs((hash + i * 2741) % 100) / 100) * (opacityRange[1] - opacityRange[0]);
-      
-      // Calculate blur radius between 0.5px and 1.5px
-      const blur = 0.5 + (Math.abs((hash + i * 1619) % 100) / 100);
-      
-      spots.push({
-        x,
-        y,
-        size,
-        color,
-        opacity,
-        blur
-      });
-    }
-    
-    return spots;
-  };
-
-  const getSmudgedText = (text, createdAt, messageId) => {
-    const daysOld = differenceInDays(new Date(), new Date(createdAt));
-    
-    // No smudging for new messages
-    if (daysOld < 2) {
-      return text.split(/\s+/).map((word, i) => (
-        <React.Fragment key={i}>
-          {i > 0 && ' '}
-          <span style={{ display: 'inline-block' }}>
-            {word}
-          </span>
-        </React.Fragment>
-      ));
-    }
-
-    // Calculate smudge probability and intensity based on age
-    let smudgeProbability = 0;
-    let blurIntensity = 0;
-    
-    if (daysOld < 5) {
-      smudgeProbability = 0.015;
-      blurIntensity = 0.2;
-    } else if (daysOld < 9) {
-      smudgeProbability = 0.025;
-      blurIntensity = 0.4;
-    } else if (daysOld < 14) {
-      smudgeProbability = 0.04;
-      blurIntensity = 0.6;
-    } else if (daysOld < 30) {
-      smudgeProbability = 0.06;
-      blurIntensity = 0.8;
-    } else {
-      smudgeProbability = 0.08;
-      blurIntensity = 1;
-    }
-
-    const getHashValue = (str, index) => {
-      const hash = str.split('').reduce((acc, char, i) => {
-        return char.charCodeAt(0) + ((acc << 5) - acc);
-      }, index);
-      return (hash & 0xFFFFFFFF) / 0xFFFFFFFF;
-    };
-
-    // Split text into words and preserve them as complete units
-    return text.split(/\s+/).map((word, wordIndex) => {
-      const shouldSmudgeWord = getHashValue(messageId, wordIndex) < smudgeProbability;
-      
-      return (
-        <React.Fragment key={wordIndex}>
-          {wordIndex > 0 && ' '}
-          <span style={{ 
-            display: 'inline-block',
-            ...(shouldSmudgeWord ? {
-              filter: `blur(${blurIntensity}px)`,
-              opacity: 0.85,
-              textShadow: '0 0 1px rgba(0,0,0,0.15)'
-            } : {})
-          }}>
-            {word}
-          </span>
-        </React.Fragment>
-      );
-    });
-  };
-
-  const getFontFamily = (fontId) => {
-    
-    // If fontId is undefined or null, return default font
-    if (!fontId) {
-      return FONTS[0].family;
-    }
-    
-    // Find the font by ID
-    const font = FONTS.find(f => f.id === Number(fontId));
-    return font ? font.family : FONTS[0].family;
   };
 
   useEffect(() => {
@@ -1323,9 +1202,10 @@ function MainApp() {
                       onClick={handleMessageClose}
                     >
                       {/* Algae Spots Layer */}
-                      {currentMessage && differenceInDays(new Date(), new Date(currentMessage.createdAt)) >= 3 && (
-                        <>
-                          {getDeterministicSpots(currentMessage._id, differenceInDays(new Date(), new Date(currentMessage.createdAt))).map((spot, index) => (
+                      {(() => {
+                        const daysSinceCreation = differenceInDays(new Date(), new Date(currentMessage.createdAt));
+                        if (currentMessage && daysSinceCreation >= 3) {
+                          return getDeterministicSpots(currentMessage._id, daysSinceCreation).map((spot, index) => (
                             <Box
                               key={index}
                               sx={{
@@ -1343,9 +1223,10 @@ function MainApp() {
                                 transform: 'translate(-50%, -50%)'
                               }}
                             />
-                          ))}
-                        </>
-                      )}
+                          ));
+                        }
+                        return null;
+                      })()}
                       {/* Content Layer */}
                       <Box
                         sx={{
@@ -1356,6 +1237,7 @@ function MainApp() {
                       >
                         <Typography
                           variant="body1"
+                          dangerouslySetInnerHTML={{ __html: getSmudgedText(currentMessage.content, currentMessage.createdAt, currentMessage._id) }}
                           sx={{
                             fontFamily: getFontFamily(currentMessage.font),
                             fontSize: '1.25rem',
@@ -1364,11 +1246,12 @@ function MainApp() {
                             wordBreak: 'normal',
                             overflowWrap: 'break-word',
                             hyphens: 'none',
-                            mb: 2
+                            mb: 2,
+                            '& span': {
+                              transition: 'filter 0.3s ease-in-out'
+                            }
                           }}
-                        >
-                          {getSmudgedText(currentMessage.content, currentMessage.createdAt, currentMessage._id)}
-                        </Typography>
+                        />
                         <Box 
                           sx={{ 
                             display: 'flex',
@@ -1391,7 +1274,7 @@ function MainApp() {
                                 day: 'numeric'
                               })}
                             </Typography>
-                            {currentMessage.sessionId === sessionId && (
+                            {currentMessage.sessionId === sessionId && Array.isArray(currentMessage.readBy) && currentMessage.readBy.length > 0 && (
                               <Typography
                                 variant="caption"
                                 sx={{
@@ -1401,7 +1284,7 @@ function MainApp() {
                                   mt: 0.5
                                 }}
                               >
-                                {currentMessage.readBy?.length || 0} {currentMessage.readBy?.length === 1 ? 'person has' : 'people have'} found this message
+                                {currentMessage.readBy.length} {currentMessage.readBy.length === 1 ? 'person has' : 'people have'} found this message
                               </Typography>
                             )}
                           </Box>
@@ -1420,7 +1303,7 @@ function MainApp() {
                         </Box>
                       </Box>
                       {/* Sketch Layer */}
-                      {currentMessage.sketch && (
+                      {currentMessage.sketch > 0 && (
                         <Box
                           sx={{
                             position: 'absolute',

@@ -14,7 +14,7 @@ RUN npm install @fontsource/playfair-display
 # Copy the rest of the frontend code
 COPY . .
 
-EXPOSE 3000
+EXPOSE 3012
 
 ENV WDS_SOCKET_PORT=0
 

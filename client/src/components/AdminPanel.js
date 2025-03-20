@@ -29,7 +29,7 @@ import bottle3 from '../assets/bottles/bottle3.svg';
 import bottle4 from '../assets/bottles/bottle4.svg';
 import bottle5 from '../assets/bottles/bottle5.svg';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3011';
 
 const bottles = [bottle1, bottle2, bottle3, bottle4, bottle5];
 

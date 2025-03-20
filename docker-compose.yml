@@ -3,49 +3,44 @@ version: '3.8'
 services:
   mongodb:
     image: mongo:latest
+    command: mongod --port 3010
     ports:
-      - "27017:27017"
+      - "3010:3010"
     volumes:
       - mongodb_data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--port", "3010", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  server:
+    build: ./server
     ports:
-      - "3001:3001"
+      - "3011:3011"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/message-in-a-bottle
-      - PORT=3001
-      - NODE_ENV=development
-    volumes:
-      - ./server:/app
-      - /app/node_modules
+      - MONGODB_URI=mongodb://mongodb:3010/message-in-a-bottle
+      - PORT=3011
+      - BASE_PATH=/vibe-miab-server
     depends_on:
       mongodb:
         condition: service_healthy
-
-  frontend:
-    build:
-      context: ./client
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - REACT_APP_API_URL=http://localhost:3001
-      - CHOKIDAR_USEPOLLING=true
-      - WDS_SOCKET_PORT=0
     volumes:
-      - ./client/src:/app/src
-      - ./client/public:/app/public
+      - ./server:/app
       - /app/node_modules
-    depends_on:
-      - backend
+
+  client:
+    build: ./client
+    ports:
+      - "3012:3012"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3011/vibe-miab-server
+      - PUBLIC_URL=/vibe-message-in-a-bottle
+      - WDS_SOCKET_PORT=0
+      - PORT=3012
+    volumes:
+      - ./client:/app
+      - /app/node_modules
 
 volumes:
   mongodb_data: 

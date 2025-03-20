@@ -28,8 +28,8 @@ npm run dev
 ```
 
 The application will be available at:
-- Frontend: http://localhost:3000
-- Backend: http://localhost:3001
+- Frontend: http://localhost:3012
+- Backend: http://localhost:3011
 
 ## Production Deployment
 

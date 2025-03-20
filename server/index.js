@@ -8,7 +8,8 @@ const authRoutes = require('./routes/auth');
 const auth = require('./middleware/auth');
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3011;
+const basePath = process.env.BASE_PATH || '/vibe-miab-server';
 
 // Middleware
 app.use(cors());
@@ -20,16 +21,19 @@ const getClientIp = (req) => {
          req.socket.remoteAddress;
 };
 
+// Create a router for all API routes
+const apiRouter = express.Router();
+
 // Root route for testing
-app.get('/', (req, res) => {
+apiRouter.get('/', (req, res) => {
   res.json({ message: 'Message in a Bottle API is running' });
 });
 
 // Auth routes
-app.use('/api/auth', authRoutes);
+apiRouter.use('/auth', authRoutes);
 
 // Public routes
-app.post('/api/messages', async (req, res) => {
+apiRouter.post('/messages', async (req, res) => {
   try {
     const { content, author, bottleStyle, sessionId, font, sketch } = req.body;
     
@@ -69,7 +73,7 @@ app.post('/api/messages', async (req, res) => {
   }
 });
 
-app.get('/api/messages/random', async (req, res) => {
+apiRouter.get('/messages/random', async (req, res) => {
   try {
     const sessionId = req.query.sessionId;
     const excludeMessageId = req.query.excludeMessageId;
@@ -206,7 +210,7 @@ app.get('/api/messages/random', async (req, res) => {
 });
 
 // Protected admin routes
-app.get('/api/admin/messages/pending', auth, async (req, res) => {
+apiRouter.get('/admin/messages/pending', auth, async (req, res) => {
   try {
     const messages = await Message.find({ status: 'pending' })
       .select('-ipAddress')
@@ -218,7 +222,7 @@ app.get('/api/admin/messages/pending', auth, async (req, res) => {
   }
 });
 
-app.post('/api/admin/messages/:id/moderate', auth, async (req, res) => {
+apiRouter.post('/admin/messages/:id/moderate', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -245,7 +249,7 @@ app.post('/api/admin/messages/:id/moderate', auth, async (req, res) => {
 });
 
 // Add new endpoint for deleting messages
-app.delete('/api/admin/messages/:id', auth, async (req, res) => {
+apiRouter.delete('/admin/messages/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -263,7 +267,7 @@ app.delete('/api/admin/messages/:id', auth, async (req, res) => {
 });
 
 // Add endpoint to fetch all messages
-app.get('/api/admin/messages', auth, async (req, res) => {
+apiRouter.get('/admin/messages', auth, async (req, res) => {
   try {
     const messages = await Message.find()
       .select('-ipAddress')
@@ -274,6 +278,9 @@ app.get('/api/admin/messages', auth, async (req, res) => {
     res.status(500).json({ error: 'Error fetching messages' });
   }
 });
+
+// Mount all API routes under the base path
+app.use(basePath + '/api', apiRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -11,18 +11,12 @@ import '@fontsource/playfair-display/700.css';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Router>
+    <Router basename="/message-in-a-bottle">
       <Routes>
-        <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/" element={<App />} />
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute>
-              <AdminPanel />
-            </AdminRoute>
-          }
-        />
+        <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="*" element={<App />} />
       </Routes>
     </Router>
   </React.StrictMode>

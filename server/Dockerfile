@@ -6,12 +6,12 @@ WORKDIR /app
 RUN npm install -g nodemon
 
 # Copy server files including its package.json
-COPY server/ ./
+COPY . .
 
 # Install dependencies
 RUN npm install
 
-EXPOSE 3001
+EXPOSE 3011
 
 # Run with nodemon watching both the script and server files
 CMD ["nodemon", "start.js"] 
