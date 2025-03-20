@@ -13,6 +13,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - default
+      - nginx
 
   server:
     build: ./server
@@ -22,25 +25,34 @@ services:
       - MONGODB_URI=mongodb://mongodb:3010/message-in-a-bottle
       - PORT=3011
       - BASE_PATH=/vibe-miab-server
-    depends_on:
-      mongodb:
-        condition: service_healthy
     volumes:
       - ./server:/app
       - /app/node_modules
+    networks:
+      - default
+      - nginx
 
   client:
     build: ./client
     ports:
       - "3012:3012"
     environment:
-      - REACT_APP_API_URL=http://localhost:3011/vibe-miab-server
+      - REACT_APP_API_URL=/vibe-miab-server
       - PUBLIC_URL=/vibe-message-in-a-bottle
       - WDS_SOCKET_PORT=0
       - PORT=3012
     volumes:
       - ./client:/app
       - /app/node_modules
+    networks:
+      - default
+      - nginx
 
 volumes:
-  mongodb_data: 
+  mongodb_data:
+
+networks:
+  default:
+    name: message-in-a-bottle
+  nginx:
+    external: true

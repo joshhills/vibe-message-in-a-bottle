@@ -11,7 +11,7 @@ import '@fontsource/playfair-display/700.css';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <Router basename="/message-in-a-bottle">
+    <Router basename="/vibe-message-in-a-bottle">
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
