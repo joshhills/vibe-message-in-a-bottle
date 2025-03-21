@@ -290,7 +290,6 @@ function AdminPanel() {
                     />
                   </TableCell>
                   <TableCell>
-                    {console.log('Message:', message._id, 'Sketch:', message.sketch, 'Icon:', message.sketch !== undefined && message.sketch !== 0 ? SKETCHES[message.sketch]?.icon : 'none')}
                     {message.sketch !== undefined && message.sketch !== 0 && SKETCHES[message.sketch]?.icon && (
                       <img
                         src={SKETCHES[message.sketch].icon}
@@ -359,7 +358,6 @@ function AdminPanel() {
                     />
                   </TableCell>
                   <TableCell>
-                    {console.log('Message:', message._id, 'Sketch:', message.sketch, 'Icon:', message.sketch !== undefined && message.sketch !== 0 ? SKETCHES[message.sketch]?.icon : 'none')}
                     {message.sketch !== undefined && message.sketch !== 0 && SKETCHES[message.sketch]?.icon && (
                       <img
                         src={SKETCHES[message.sketch].icon}
