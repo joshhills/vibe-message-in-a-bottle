@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogActions,
   Alert,
+  TextField,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -38,8 +39,13 @@ function AdminPanel() {
   const [pendingMessages, setPendingMessages] = useState([]);
   const [allMessages, setAllMessages] = useState([]);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [createAdminDialogOpen, setCreateAdminDialogOpen] = useState(false);
+  const [newAdminUsername, setNewAdminUsername] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('adminToken');
@@ -98,6 +104,18 @@ function AdminPanel() {
     }
   }, []);
 
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/auth/me`, getAuthHeaders());
+      setCurrentUser(response.data);
+    } catch (err) {
+      console.error('Error fetching current user:', err);
+      if (err.response?.status === 401) {
+        handleAuthError();
+      }
+    }
+  }, []);  // Empty dependency array since getAuthHeaders is stable
+
   useEffect(() => {
     // Check if we have a token before fetching
     const token = localStorage.getItem('adminToken');
@@ -106,17 +124,20 @@ function AdminPanel() {
       return;
     }
 
+    // Initial fetch
     fetchPendingMessages();
     fetchAllMessages();
+    fetchCurrentUser();
     
     // Refresh every 30 seconds
     const interval = setInterval(() => {
       fetchPendingMessages();
       fetchAllMessages();
+      fetchCurrentUser();  // Also refresh the current user
     }, 30000);
     
     return () => clearInterval(interval);
-  }, [fetchPendingMessages, fetchAllMessages]);
+  }, [fetchPendingMessages, fetchAllMessages, fetchCurrentUser]);  // Add fetchCurrentUser to dependencies
 
   const handleModerate = async (id, status) => {
     try {
@@ -186,25 +207,53 @@ function AdminPanel() {
     return new Date(dateString).toLocaleString();
   };
 
+  const handleCreateAdmin = async () => {
+    try {
+      await axios.post(`${API_URL}/api/auth/create-admin`, 
+        { username: newAdminUsername, password: newAdminPassword },
+        getAuthHeaders()
+      );
+      setCreateAdminDialogOpen(false);
+      setNewAdminUsername('');
+      setNewAdminPassword('');
+      setSuccess('Admin user created successfully');
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccess(null), 5000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error creating admin user');
+    }
+  };
+
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">
-          Admin Panel
-        </Typography>
-        <Button 
-          variant="outlined" 
-          color="primary" 
-          onClick={handleLogout}
-        >
-          Logout
-        </Button>
-      </Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+        <Typography variant="h4">Admin Panel</Typography>
+        <Stack direction="row" spacing={2} alignItems="center">
+          {currentUser && (
+            <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+              Logged in as: {currentUser.username}
+            </Typography>
+          )}
+          <Button variant="contained" color="primary" onClick={() => setCreateAdminDialogOpen(true)}>
+            Create Admin User
+          </Button>
+          <Button variant="outlined" color="error" onClick={handleLogout}>
+            Logout
+          </Button>
+        </Stack>
+      </Stack>
 
       {/* Error Message */}
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
           {error}
+        </Alert>
+      )}
+
+      {/* Success Message */}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+          {success}
         </Alert>
       )}
 
@@ -330,6 +379,32 @@ function AdminPanel() {
           <Button onClick={handleDeleteConfirm} color="error" variant="contained">
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={createAdminDialogOpen} onClose={() => setCreateAdminDialogOpen(false)}>
+        <DialogTitle>Create New Admin User</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Username"
+            fullWidth
+            value={newAdminUsername}
+            onChange={(e) => setNewAdminUsername(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Password"
+            type="password"
+            fullWidth
+            value={newAdminPassword}
+            onChange={(e) => setNewAdminPassword(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateAdminDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleCreateAdmin} variant="contained">Create</Button>
         </DialogActions>
       </Dialog>
     </Box>

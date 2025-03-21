@@ -15,7 +15,7 @@ services:
       retries: 5
     networks:
       - default
-      - nginx
+      # - nginx
 
   server:
     build: ./server
@@ -30,14 +30,14 @@ services:
       - /app/node_modules
     networks:
       - default
-      - nginx
+      # - nginx
 
   client:
     build: ./client
     ports:
       - "3012:3012"
     environment:
-      - REACT_APP_API_URL=/vibe-miab-server
+      - REACT_APP_API_URL=http://localhost:3011/vibe-miab-server
       - PUBLIC_URL=/vibe-message-in-a-bottle
       - WDS_SOCKET_PORT=0
       - PORT=3012
@@ -46,7 +46,7 @@ services:
       - /app/node_modules
     networks:
       - default
-      - nginx
+      # - nginx
 
 volumes:
   mongodb_data:
@@ -54,5 +54,5 @@ volumes:
 networks:
   default:
     name: message-in-a-bottle
-  nginx:
-    external: true
+  # nginx:
+  #   external: true
