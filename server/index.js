@@ -6,20 +6,79 @@ const { seedDatabase } = require('./seed');
 const Message = require('./models/Message');
 const authRoutes = require('./routes/auth');
 const auth = require('./middleware/auth');
+const axios = require('axios');
 
 const app = express();
 const port = process.env.PORT || 3011;
 const basePath = process.env.BASE_PATH || '/vibe-miab-server';
 
+// Function to get client IP from request
+const getClientIp = (req) => {
+  let ip = req.headers['x-forwarded-for'] || 
+           req.headers['x-real-ip'] ||
+           req.connection.remoteAddress ||
+           req.socket.remoteAddress;
+           
+  // Handle comma-separated IPs (from proxies)
+  if (ip && ip.includes(',')) {
+    ip = ip.split(',')[0].trim();
+  }
+  
+  // Remove IPv6 prefix if present
+  if (ip && ip.startsWith('::ffff:')) {
+    ip = ip.substring(7);
+  }
+  
+  return ip;
+};
+
+// Function to get location data from IP
+const getLocationFromIp = async (ip) => {
+  if (!ip) return null;
+  
+  try {
+    // Add a timeout to the request
+    const response = await axios.get(`http://ip-api.com/json/${ip}`, {
+      timeout: 5000 // 5 second timeout
+    });
+    
+    if (response.data.status === 'success') {
+      return {
+        country: response.data.country,
+        city: response.data.city,
+        region: response.data.regionName,
+        latitude: response.data.lat,
+        longitude: response.data.lon
+      };
+    }
+    console.warn(`IP location lookup failed for IP ${ip}:`, response.data.message || 'Unknown error');
+    return null;
+  } catch (error) {
+    console.error('Error getting location from IP:', error.message);
+    return null;
+  }
+};
+
+// Function to retry getting location data for a message
+const retryGetLocation = async (message) => {
+  if (!message.location && message.ipAddress) {
+    try {
+      const location = await getLocationFromIp(message.ipAddress);
+      if (location) {
+        message.location = location;
+        await message.save();
+        return true;
+      }
+    } catch (error) {
+      console.error('Error retrying location fetch:', error.message);
+    }
+  }
+  return false;
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Get client IP middleware
-const getClientIp = (req) => {
-  return req.headers['x-forwarded-for']?.split(',')[0].trim() || 
-         req.socket.remoteAddress;
-};
 
 // Create a router for all API routes
 const apiRouter = express.Router();
@@ -49,12 +108,16 @@ apiRouter.post('/messages', async (req, res) => {
       });
     }
 
+    const ipAddress = getClientIp(req);
+    const location = await getLocationFromIp(ipAddress);
+
     const message = new Message({ 
       content, 
       author, 
       bottleStyle,
       sessionId,
-      ipAddress: getClientIp(req),
+      ipAddress,
+      location,
       font: font || 1, // Default to Georgia if not specified
       sketch: sketch || 0, // Default to None if not specified
       status: 'pending'  // Explicitly set status to pending
@@ -215,6 +278,14 @@ apiRouter.get('/admin/messages/pending', auth, async (req, res) => {
     const messages = await Message.find({ status: 'pending' })
       .select('-ipAddress')
       .sort({ createdAt: 1 });
+    
+    // Try to get locations for messages that don't have them
+    for (const message of messages) {
+      if (!message.location && message.ipAddress) {
+        await retryGetLocation(message);
+      }
+    }
+    
     res.json(messages);
   } catch (error) {
     console.error('Error fetching pending messages:', error);
@@ -233,7 +304,10 @@ apiRouter.post('/admin/messages/:id/moderate', auth, async (req, res) => {
     
     const message = await Message.findByIdAndUpdate(
       id,
-      { status },
+      { 
+        status,
+        ...(status === 'approved' ? { approvedBy: req.user.username } : {})
+      },
       { new: true }
     ).select('-ipAddress');
     
@@ -272,6 +346,14 @@ apiRouter.get('/admin/messages', auth, async (req, res) => {
     const messages = await Message.find()
       .select('-ipAddress')
       .sort({ createdAt: -1 }); // Sort by newest first
+    
+    // Try to get locations for messages that don't have them
+    for (const message of messages) {
+      if (!message.location && message.ipAddress) {
+        await retryGetLocation(message);
+      }
+    }
+    
     res.json(messages);
   } catch (error) {
     console.error('Error fetching messages:', error);
