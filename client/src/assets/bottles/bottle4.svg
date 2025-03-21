@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="60" height="120" viewBox="0 0 60 120" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <path d="M25 10 C25 5, 35 5, 35 10 L35 25 C40 30, 45 35, 45 45 C45 55, 35 60, 35 70 C35 80, 45 85, 45 95 C45 105, 35 110, 35 110 C35 115, 25 115, 25 110 C25 110, 15 105, 15 95 C15 85, 25 80, 25 70 C25 60, 15 55, 15 45 C15 35, 20 30, 25 25 Z" 
-        fill="#b6735f" 
-        stroke="#995f4e" 
-        stroke-width="1"/>
-  <path d="M28 40 L32 40 L31 50 L29 50 Z" 
-        fill="#ddd"/>
-</svg> 

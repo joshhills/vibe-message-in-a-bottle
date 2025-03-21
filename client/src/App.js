@@ -9,11 +9,14 @@ import { MESSAGE_CONSTRAINTS, DISPLAY_SETTINGS } from './config/constraints';
 import logo from './assets/logo.svg';
 import background from './assets/background.jpg';
 import BottleSelector from './components/BottleSelector';
-import bottle1 from './assets/bottles/bottle1.svg';
-import bottle2 from './assets/bottles/bottle2.svg';
-import bottle3 from './assets/bottles/bottle3.svg';
-import bottle4 from './assets/bottles/bottle4.svg';
-import bottle5 from './assets/bottles/bottle5.svg';
+import bottle1 from './assets/bottles/bottle1.png';
+import bottle2 from './assets/bottles/bottle2.png';
+import bottle3 from './assets/bottles/bottle3.png';
+import bottle4 from './assets/bottles/bottle4.png';
+import bottle5 from './assets/bottles/bottle5.png';
+import bottle6 from './assets/bottles/bottle6.png';
+import bottle7 from './assets/bottles/bottle7.png';
+import bottle8 from './assets/bottles/bottle8.png';
 import beachAmbience from './assets/beach-ambience.mp3';
 import pageUnfolding1 from './assets/page-unfolding-1.mp3';
 import pageUnfolding2 from './assets/page-unfolding-2.mp3';
@@ -78,7 +81,7 @@ const FORM_STEPS = {
   SKETCH: 'sketch'
 };
 
-const bottles = [bottle1, bottle2, bottle3, bottle4, bottle5];
+const bottles = [bottle1, bottle2, bottle3, bottle4, bottle5, bottle6, bottle7, bottle8];
 
 function App() {
   return (
