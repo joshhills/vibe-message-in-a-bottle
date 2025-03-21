@@ -337,7 +337,6 @@ function MainApp() {
                 setSelectedFont(fontId);
                 setTimeout(() => setFormStep(FORM_STEPS.MESSAGE), 50);
               }}
-              previewText={messageContent || undefined}
             />
             <Stack direction="row" spacing={2} justifyContent="center" sx={{ mt: 3 }}>
               <Button variant="text" onClick={() => setFormStep(FORM_STEPS.BOTTLE)}>
