@@ -22,6 +22,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
+import { SKETCHES } from '../components/SketchSelector';
 
 // Import bottle images
 import bottle1 from '../assets/bottles/bottle1.svg';
@@ -270,6 +271,7 @@ function AdminPanel() {
                 <TableCell>Author</TableCell>
                 <TableCell>Content</TableCell>
                 <TableCell>Bottle</TableCell>
+                <TableCell>Sketch</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -286,6 +288,16 @@ function AdminPanel() {
                       alt={`Bottle ${message.bottleStyle}`}
                       style={{ width: '30px', height: '60px' }}
                     />
+                  </TableCell>
+                  <TableCell>
+                    {console.log('Message:', message._id, 'Sketch:', message.sketch, 'Icon:', message.sketch !== undefined && message.sketch !== 0 ? SKETCHES[message.sketch]?.icon : 'none')}
+                    {message.sketch !== undefined && message.sketch !== 0 && SKETCHES[message.sketch]?.icon && (
+                      <img
+                        src={SKETCHES[message.sketch].icon}
+                        alt="Sketch"
+                        style={{ height: '50px' }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell>Pending</TableCell>
                   <TableCell>
@@ -328,6 +340,7 @@ function AdminPanel() {
                 <TableCell>Author</TableCell>
                 <TableCell>Content</TableCell>
                 <TableCell>Bottle</TableCell>
+                <TableCell>Sketch</TableCell>
                 <TableCell>Views</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -344,6 +357,16 @@ function AdminPanel() {
                       alt={`Bottle ${message.bottleStyle}`}
                       style={{ width: '30px', height: '60px' }}
                     />
+                  </TableCell>
+                  <TableCell>
+                    {console.log('Message:', message._id, 'Sketch:', message.sketch, 'Icon:', message.sketch !== undefined && message.sketch !== 0 ? SKETCHES[message.sketch]?.icon : 'none')}
+                    {message.sketch !== undefined && message.sketch !== 0 && SKETCHES[message.sketch]?.icon && (
+                      <img
+                        src={SKETCHES[message.sketch].icon}
+                        alt="Sketch"
+                        style={{ height: '50px' }}
+                      />
+                    )}
                   </TableCell>
                   <TableCell>{message.readBy?.length || 0}</TableCell>
                   <TableCell>
