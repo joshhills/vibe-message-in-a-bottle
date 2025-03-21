@@ -1,4 +1,5 @@
 export const NARRATIVE_MESSAGES = {
+  INITIAL_BUTTON: "Take a walk along the beach",
   INTRO_SCENE: "The waves whisper secrets to the shore, carrying stories from distant lands. Each grain of sand holds a memory, each shell a tale untold.",
   BOTTLE_SPOTTED: [
     "A bottle catches your eye, its glass glinting in the sunlight.",

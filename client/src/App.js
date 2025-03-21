@@ -57,6 +57,7 @@ const theme = createTheme({
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3011';
 
 const STATES = {
+  INITIAL: 'initial',
   LOADING: 'loading',
   SHOW_SCENE: 'showScene',
   SHOW_INITIAL_MESSAGE: 'showInitialMessage',
@@ -504,6 +505,9 @@ function MainApp() {
 
   const advanceState = () => {
     switch (currentState) {
+      case STATES.INITIAL:
+        setCurrentState(STATES.SHOW_SCENE);
+        break;
       case STATES.SHOW_SCENE:
         setBottleSpottedMessage(getRandomMessage(NARRATIVE_MESSAGES.BOTTLE_SPOTTED));
         setCurrentState(STATES.SHOW_INITIAL_MESSAGE);
@@ -603,7 +607,7 @@ function MainApp() {
   };
 
   useEffect(() => {
-    setCurrentState(STATES.SHOW_SCENE);
+    setCurrentState(STATES.INITIAL);
   }, []);
 
   // Add auto-advance from intro scene
@@ -796,6 +800,31 @@ function MainApp() {
                 minHeight: '200px',
               }}
             >
+              {/* Scene Setting */}
+              <Fade in={currentState === STATES.INITIAL}>
+                <Box sx={{ 
+                  position: 'absolute',
+                  bottom: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '100%',
+                  textAlign: 'center'
+                }}>
+                  <Button
+                    variant="contained"
+                    onClick={advanceState}
+                    sx={{
+                      background: '#3498db',
+                      '&:hover': { background: '#2980b9' },
+                      fontSize: '1.1rem',
+                      padding: '8px 24px',
+                    }}
+                  >
+                    {NARRATIVE_MESSAGES.INITIAL_BUTTON}
+                  </Button>
+                </Box>
+              </Fade>
+
               {/* Scene Setting */}
               <Fade in={currentState === STATES.SHOW_SCENE}>
                 <Box sx={{ 
