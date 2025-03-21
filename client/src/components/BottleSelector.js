@@ -39,7 +39,7 @@ const BottleSelector = ({ selectedBottle, onSelect }) => {
               style={{
                 width: '100%',
                 height: 'auto',
-                maxHeight: '140px',
+                maxHeight: '100px',
                 objectFit: 'contain'
               }}
             />

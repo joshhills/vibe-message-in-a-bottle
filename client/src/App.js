@@ -229,6 +229,7 @@ function MainApp() {
     // Just prepare next bottle without setting hasSubmitted
     const nextBottle = Math.floor(Math.random() * 5) + 1;
     setCurrentBottle(nextBottle);
+    setCurrentRotation(Math.random() * 8 - 4);  // Add random rotation here
     setNewMessageAppearsText(getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS));
     setCurrentState(STATES.SHOW_DISCOVER);
     setTimeout(() => {

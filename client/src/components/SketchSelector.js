@@ -46,14 +46,14 @@ const SketchSelector = ({ selectedSketch, onSelect }) => {
                 src={sketch.icon}
                 alt={sketch.name}
                 sx={{
-                  width: 60,
-                  height: 60,
+                  width: 40,
+                  height: 40,
                   mb: 1,
                   filter: selectedSketch === sketch.id ? 'invert(40%) sepia(52%) saturate(2878%) hue-rotate(198deg) brightness(104%) contrast(95%)' : 'none'
                 }}
               />
             ) : (
-              <Box sx={{ width: 60, height: 60, mb: 1 }} />
+              <Box sx={{ width: 40, height: 40, mb: 1 }} />
             )}
             <Typography
               variant="subtitle1"
