@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
     
     // Generate token
     const token = jwt.sign(
-      { userId: user._id, isAdmin: user.isAdmin },
+      { userId: user._id, username: user.username, isAdmin: user.isAdmin },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );

@@ -16,17 +16,6 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  ipAddress: {
-    type: String,
-    required: true
-  },
-  location: {
-    country: String,
-    city: String,
-    region: String,
-    latitude: Number,
-    longitude: Number
-  },
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],

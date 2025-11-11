@@ -6,75 +6,11 @@ const { seedDatabase } = require('./seed');
 const Message = require('./models/Message');
 const authRoutes = require('./routes/auth');
 const auth = require('./middleware/auth');
-const axios = require('axios');
 
 const app = express();
 const port = process.env.PORT || 3011;
 const basePath = process.env.BASE_PATH || '/vibe-miab-server';
 
-// Function to get client IP from request
-const getClientIp = (req) => {
-  let ip = req.headers['x-forwarded-for'] || 
-           req.headers['x-real-ip'] ||
-           req.connection.remoteAddress ||
-           req.socket.remoteAddress;
-           
-  // Handle comma-separated IPs (from proxies)
-  if (ip && ip.includes(',')) {
-    ip = ip.split(',')[0].trim();
-  }
-  
-  // Remove IPv6 prefix if present
-  if (ip && ip.startsWith('::ffff:')) {
-    ip = ip.substring(7);
-  }
-  
-  return ip;
-};
-
-// Function to get location data from IP
-const getLocationFromIp = async (ip) => {
-  if (!ip) return null;
-  
-  try {
-    // Add a timeout to the request
-    const response = await axios.get(`http://ip-api.com/json/${ip}`, {
-      timeout: 5000 // 5 second timeout
-    });
-    
-    if (response.data.status === 'success') {
-      return {
-        country: response.data.country,
-        city: response.data.city,
-        region: response.data.regionName,
-        latitude: response.data.lat,
-        longitude: response.data.lon
-      };
-    }
-    console.warn(`IP location lookup failed for IP ${ip}:`, response.data.message || 'Unknown error');
-    return null;
-  } catch (error) {
-    console.error('Error getting location from IP:', error.message);
-    return null;
-  }
-};
-
-// Function to retry getting location data for a message
-const retryGetLocation = async (message) => {
-  if (!message.location && message.ipAddress) {
-    try {
-      const location = await getLocationFromIp(message.ipAddress);
-      if (location) {
-        message.location = location;
-        await message.save();
-        return true;
-      }
-    } catch (error) {
-      console.error('Error retrying location fetch:', error.message);
-    }
-  }
-  return false;
-};
 
 // Middleware
 app.use(cors());
@@ -108,16 +44,11 @@ apiRouter.post('/messages', async (req, res) => {
       });
     }
 
-    const ipAddress = getClientIp(req);
-    const location = await getLocationFromIp(ipAddress);
-
     const message = new Message({ 
       content, 
       author, 
       bottleStyle,
       sessionId,
-      ipAddress,
-      location,
       font: font || 1, // Default to Georgia if not specified
       sketch: sketch || 0, // Default to None if not specified
       status: 'pending'  // Explicitly set status to pending
@@ -125,11 +56,7 @@ apiRouter.post('/messages', async (req, res) => {
     
     await message.save();
     
-    // Don't send back the ipAddress field
-    const responseMessage = message.toObject();
-    delete responseMessage.ipAddress;
-    
-    res.status(201).json(responseMessage);
+    res.status(201).json(message);
   } catch (error) {
     console.error('Error saving message:', error);
     res.status(500).json({ error: 'Error saving message' });
@@ -153,7 +80,7 @@ apiRouter.get('/messages/random', async (req, res) => {
         status: 'approved',
         sessionId: sessionId,
         ...(excludeMessageId && excludeMessageId !== 'null' ? { _id: { $ne: excludeMessageId } } : {})
-      }).select('-ipAddress');
+      });
 
       if (userMessage) {
         // Only add to readBy if not already there
@@ -177,7 +104,7 @@ apiRouter.get('/messages/random', async (req, res) => {
       ...baseQuery,
       readBy: { $size: 0 },
       sessionId: { $ne: sessionId }
-    }).select('-ipAddress'); // Exclude ipAddress but include all other fields
+    });
 
     if (unreadMessages.length > 0) {
       const randomMessage = unreadMessages[Math.floor(Math.random() * unreadMessages.length)];
@@ -194,7 +121,7 @@ apiRouter.get('/messages/random', async (req, res) => {
       ...baseQuery,
       readBy: { $ne: sessionId },
       sessionId: { $ne: sessionId }
-    }).select('-ipAddress'); // Exclude ipAddress but include all other fields
+    });
 
     if (sessionUnreadMessages.length > 0) {
       const randomMessage = sessionUnreadMessages[Math.floor(Math.random() * sessionUnreadMessages.length)];
@@ -210,7 +137,7 @@ apiRouter.get('/messages/random', async (req, res) => {
     const allOtherMessages = await Message.find({
       ...baseQuery,
       sessionId: { $ne: sessionId }
-    }).select('-ipAddress'); // Exclude ipAddress but include all other fields
+    });
 
     if (allOtherMessages.length > 0) {
       // Calculate weights based on read counts
@@ -254,7 +181,7 @@ apiRouter.get('/messages/random', async (req, res) => {
     const userMessage = await Message.findOne({
       ...baseQuery,
       sessionId: sessionId
-    }).select('-ipAddress');
+    });
 
     if (userMessage) {
       // Only add to readBy if not already there
@@ -276,15 +203,7 @@ apiRouter.get('/messages/random', async (req, res) => {
 apiRouter.get('/admin/messages/pending', auth, async (req, res) => {
   try {
     const messages = await Message.find({ status: 'pending' })
-      .select('-ipAddress')
       .sort({ createdAt: 1 });
-    
-    // Try to get locations for messages that don't have them
-    for (const message of messages) {
-      if (!message.location && message.ipAddress) {
-        await retryGetLocation(message);
-      }
-    }
     
     res.json(messages);
   } catch (error) {
@@ -309,7 +228,7 @@ apiRouter.post('/admin/messages/:id/moderate', auth, async (req, res) => {
         ...(status === 'approved' ? { approvedBy: req.user.username } : {})
       },
       { new: true }
-    ).select('-ipAddress');
+    );
     
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
@@ -327,7 +246,7 @@ apiRouter.delete('/admin/messages/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const message = await Message.findByIdAndDelete(id).select('-ipAddress');
+    const message = await Message.findByIdAndDelete(id);
     
     if (!message) {
       return res.status(404).json({ error: 'Message not found' });
@@ -344,15 +263,7 @@ apiRouter.delete('/admin/messages/:id', auth, async (req, res) => {
 apiRouter.get('/admin/messages', auth, async (req, res) => {
   try {
     const messages = await Message.find()
-      .select('-ipAddress')
       .sort({ createdAt: -1 }); // Sort by newest first
-    
-    // Try to get locations for messages that don't have them
-    for (const message of messages) {
-      if (!message.location && message.ipAddress) {
-        await retryGetLocation(message);
-      }
-    }
     
     res.json(messages);
   } catch (error) {

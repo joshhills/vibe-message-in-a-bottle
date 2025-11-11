@@ -276,7 +276,6 @@ function AdminPanel() {
                 <TableCell>Bottle</TableCell>
                 <TableCell>Sketch</TableCell>
                 <TableCell>Status</TableCell>
-                <TableCell>Location</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -303,24 +302,6 @@ function AdminPanel() {
                     )}
                   </TableCell>
                   <TableCell>Pending</TableCell>
-                  <TableCell>
-                    {message.location ? (
-                      <a
-                        href={`https://www.google.com/maps?q=${message.location.latitude},${message.location.longitude}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#3498db', textDecoration: 'none' }}
-                      >
-                        {message.location.city}, {message.location.country}
-                      </a>
-                    ) : message.ipAddress ? (
-                      <Typography variant="body2" color="text.secondary">
-                        Location unavailable
-                      </Typography>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={1}>
                       <Button
@@ -364,7 +345,6 @@ function AdminPanel() {
                 <TableCell>Sketch</TableCell>
                 <TableCell>Views</TableCell>
                 <TableCell>Approver</TableCell>
-                <TableCell>Location</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -392,24 +372,6 @@ function AdminPanel() {
                   </TableCell>
                   <TableCell>{message.readBy?.length || 0}</TableCell>
                   <TableCell>{message.approvedBy || '-'}</TableCell>
-                  <TableCell>
-                    {message.location ? (
-                      <a
-                        href={`https://www.google.com/maps?q=${message.location.latitude},${message.location.longitude}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: '#3498db', textDecoration: 'none' }}
-                      >
-                        {message.location.city}, {message.location.country}
-                      </a>
-                    ) : message.ipAddress ? (
-                      <Typography variant="body2" color="text.secondary">
-                        Location unavailable
-                      </Typography>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
                   <TableCell>
                     <Button
                       variant="contained"

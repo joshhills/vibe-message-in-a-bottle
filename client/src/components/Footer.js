@@ -28,7 +28,7 @@ function Footer() {
           © {new Date().getFullYear()} Josh Hills
         </Typography>
         <Link
-          href="https://photos.joshhills.dev/store"
+          href="https://photos.joshhills.dev/shop"
           target="_blank"
           rel="noopener noreferrer"
           variant="body2"

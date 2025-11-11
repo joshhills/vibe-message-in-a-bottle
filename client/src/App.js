@@ -4,7 +4,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Container, Box, Typography, Paper, Fade, Button, TextField, Stack, IconButton } from '@mui/material';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-import { NARRATIVE_MESSAGES, ERROR_MESSAGES } from './config/messages';
+import { NARRATIVE_MESSAGES, ERROR_MESSAGES, getMessageText, getMessageAudio } from './config/messages';
 import { MESSAGE_CONSTRAINTS, DISPLAY_SETTINGS } from './config/constraints';
 import logo from './assets/logo.svg';
 import background from './assets/background.jpg';
@@ -127,6 +127,7 @@ function MainApp() {
     const messages = NARRATIVE_MESSAGES.MESSAGE_SENT;
     return messages[Math.floor(Math.random() * messages.length)];
   });
+  const narrativeAudioRef = useRef(null);
   const [authorLength, setAuthorLength] = useState(0);
   const [contentLength, setContentLength] = useState(0);
   const [showAuthorHint, setShowAuthorHint] = useState(false);
@@ -163,6 +164,26 @@ function MainApp() {
     return messageArray[Math.floor(Math.random() * messageArray.length)];
   };
 
+  const playNarrativeAudio = (messageObj) => {
+    if (!isMuted && messageObj) {
+      const audioPath = getMessageAudio(messageObj);
+      if (audioPath) {
+        // Stop any currently playing narrative audio
+        if (narrativeAudioRef.current) {
+          narrativeAudioRef.current.pause();
+          narrativeAudioRef.current.currentTime = 0;
+        }
+        // Create and play new audio
+        const audio = new Audio(audioPath);
+        audio.volume = 0.9; // Increased VO volume for better clarity over background
+        narrativeAudioRef.current = audio;
+        audio.play().catch(error => {
+          console.error('Narrative audio playback failed:', error);
+        });
+      }
+    }
+  };
+
   const fetchRandomMessage = async () => {
     try {
       const shouldForceOwnMessage = hasSubmitted && 
@@ -191,12 +212,16 @@ function MainApp() {
       
       // Check if we've seen this message before
       if (seenMessageIds.has(message._id)) {
-        setFamiliarMessageText(getRandomMessage(NARRATIVE_MESSAGES.FAMILIAR_MESSAGE));
+        const familiarMsg = getRandomMessage(NARRATIVE_MESSAGES.FAMILIAR_MESSAGE);
+        setFamiliarMessageText(familiarMsg);
+        playNarrativeAudio(familiarMsg);
         setCurrentMessage(message);
         setCurrentState(STATES.SHOW_FAMILIAR);
       } else if (message.sessionId === sessionId) {
         // Check if this is the user's own message
-        setFamiliarMessageText(getRandomMessage(NARRATIVE_MESSAGES.OWN_MESSAGE));
+        const ownMsg = getRandomMessage(NARRATIVE_MESSAGES.OWN_MESSAGE);
+        setFamiliarMessageText(ownMsg);
+        playNarrativeAudio(ownMsg);
         setCurrentMessage(message);
         setCurrentState(STATES.SHOW_FAMILIAR);
       } else {
@@ -207,7 +232,7 @@ function MainApp() {
       }
     } catch (error) {
       console.error('Error fetching message:', error);
-      setError(ERROR_MESSAGES.FETCH_ERROR);
+      setError(getMessageText(ERROR_MESSAGES.FETCH_ERROR));
       // If we can't get a new message, show the error briefly and then return to bottle state
       setTimeout(() => {
         setError(null);
@@ -220,7 +245,9 @@ function MainApp() {
     if (!hasSubmitted) {
       setCurrentState(STATES.SHOW_FORM);
     } else {
-      setNewMessageAppearsText(getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS));
+      const newMsg = getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS);
+      setNewMessageAppearsText(newMsg);
+      playNarrativeAudio(newMsg);
       setCurrentState(STATES.SHOW_DISCOVER);
       setTimeout(() => {
         setCurrentState(STATES.LOADING);
@@ -267,28 +294,32 @@ function MainApp() {
       setAuthorLength(0);
       
       // Show post-submit message
-      setMessageSentText(getRandomMessage(NARRATIVE_MESSAGES.MESSAGE_PENDING));
+      const pendingMsg = getRandomMessage(NARRATIVE_MESSAGES.MESSAGE_PENDING);
+      setMessageSentText(pendingMsg);
+      playNarrativeAudio(pendingMsg);
       setCurrentState(STATES.SHOW_POST_SUBMIT);
       
       // After showing the success message, fetch a new message
       setTimeout(() => {
-        setNewMessageAppearsText(getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS));
+        const discoverMsg = getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS);
+        setNewMessageAppearsText(discoverMsg);
+        playNarrativeAudio(discoverMsg);
         setCurrentState(STATES.SHOW_DISCOVER);
         setTimeout(() => {
           setCurrentState(STATES.LOADING);
           fetchRandomMessage();
         }, 2000);
-      }, 2000);
+      }, 5000);
     } catch (error) {
       if (error.response?.status === 403) {
-        setError(ERROR_MESSAGES.ALREADY_SUBMITTED);
+        setError(getMessageText(ERROR_MESSAGES.ALREADY_SUBMITTED));
         // If we get a 403, update our local state to match the server
         setHasSubmitted(true);
         localStorage.setItem('hasSubmitted', 'true');
         // Close the form and show the bottle
         setCurrentState(STATES.SHOW_BOTTLE);
       } else {
-        setError(ERROR_MESSAGES.SUBMIT_ERROR);
+        setError(getMessageText(ERROR_MESSAGES.SUBMIT_ERROR));
         setCurrentState(STATES.SHOW_FORM);
       }
     }
@@ -300,7 +331,7 @@ function MainApp() {
         return (
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="h4" sx={{ mb: 4, color: '#2c3e50', fontFamily: '"Playfair Display", serif' }}>
-              Cast Your Message to the Sea
+              {getMessageText(NARRATIVE_MESSAGES.WRITE_FORM_TITLE)}
             </Typography>
             <BottleSelector selectedBottle={selectedBottle} onSelect={(bottleId) => {
               setSelectedBottle(bottleId);
@@ -312,7 +343,7 @@ function MainApp() {
                 onClick={handleSkipMessage}
                 sx={{ color: '#666' }}
               >
-                {NARRATIVE_MESSAGES.WRITE_FORM_SKIP}
+                {getMessageText(NARRATIVE_MESSAGES.WRITE_FORM_SKIP)}
               </Button>
               <Button 
                 variant="text" 
@@ -511,7 +542,9 @@ function MainApp() {
         setCurrentState(STATES.SHOW_SCENE);
         break;
       case STATES.SHOW_SCENE:
-        setBottleSpottedMessage(getRandomMessage(NARRATIVE_MESSAGES.BOTTLE_SPOTTED));
+        const bottleMsg = getRandomMessage(NARRATIVE_MESSAGES.BOTTLE_SPOTTED);
+        setBottleSpottedMessage(bottleMsg);
+        playNarrativeAudio(bottleMsg);
         setCurrentState(STATES.SHOW_INITIAL_MESSAGE);
         break;
       case STATES.SHOW_INITIAL_MESSAGE:
@@ -530,7 +563,9 @@ function MainApp() {
         if (!hasSubmitted) {
           setCurrentState(STATES.SHOW_FORM);
         } else {
-          setNewMessageAppearsText(getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS));
+          const newMsg = getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS);
+          setNewMessageAppearsText(newMsg);
+          playNarrativeAudio(newMsg);
           setCurrentState(STATES.SHOW_DISCOVER);
           setTimeout(() => {
             setCurrentState(STATES.LOADING);
@@ -539,7 +574,9 @@ function MainApp() {
         }
         break;
       case STATES.SHOW_POST_SUBMIT:
-        setNewMessageAppearsText(getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS));
+        const postSubmitMsg = getRandomMessage(NARRATIVE_MESSAGES.NEW_MESSAGE_APPEARS);
+        setNewMessageAppearsText(postSubmitMsg);
+        playNarrativeAudio(postSubmitMsg);
         setCurrentState(STATES.SHOW_DISCOVER);
         setTimeout(() => {
           setCurrentState(STATES.LOADING);
@@ -589,6 +626,9 @@ function MainApp() {
       bottleClinkSoundsRef.current.forEach(sound => {
         sound.muted = newMutedState;
       });
+      if (narrativeAudioRef.current) {
+        narrativeAudioRef.current.muted = newMutedState;
+      }
       setIsMuted(newMutedState);
     }
   };
@@ -610,14 +650,21 @@ function MainApp() {
 
   useEffect(() => {
     setCurrentState(STATES.INITIAL);
+    
+    // Preload all bottle images to prevent flashing when switching messages
+    bottles.forEach((bottleSrc) => {
+      const img = new Image();
+      img.src = bottleSrc;
+    });
   }, []);
 
   // Add auto-advance from intro scene
   useEffect(() => {
     if (currentState === STATES.SHOW_SCENE) {
+      playNarrativeAudio(NARRATIVE_MESSAGES.INTRO_SCENE);
       const timer = setTimeout(() => {
         advanceState();
-      }, 3000);
+      }, 10500);
       return () => clearTimeout(timer);
     }
   }, [currentState]);
@@ -644,7 +691,7 @@ function MainApp() {
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = 0.2; // Set volume to 20%
+      audioRef.current.volume = 0.05; // Reduced background volume to 5% for better VO balance
       audioRef.current.loop = true;
       
       // Start playing when the user interacts with the page
@@ -822,7 +869,7 @@ function MainApp() {
                       padding: '8px 24px',
                     }}
                   >
-                    {NARRATIVE_MESSAGES.INITIAL_BUTTON}
+                    {getMessageText(NARRATIVE_MESSAGES.INITIAL_BUTTON)}
                   </Button>
                 </Box>
               </Fade>
@@ -868,7 +915,7 @@ function MainApp() {
                         textAlign: 'center',
                       }}
                     >
-                      {NARRATIVE_MESSAGES.INTRO_SCENE.split(' ').reduce((acc, word, i, arr) => {
+                      {getMessageText(NARRATIVE_MESSAGES.INTRO_SCENE).split(' ').reduce((acc, word, i, arr) => {
                         if (i === 0) return <span className="highlight-line">{word}</span>;
                         return (
                           <>
@@ -922,7 +969,7 @@ function MainApp() {
                         textAlign: 'center',
                       }}
                     >
-                      {bottleSpottedMessage.split(' ').reduce((acc, word, i, arr) => {
+                      {getMessageText(bottleSpottedMessage).split(' ').reduce((acc, word, i, arr) => {
                         if (i === 0) return <span className="highlight-line">{word}</span>;
                         return (
                           <>
@@ -976,7 +1023,7 @@ function MainApp() {
                         textAlign: 'center',
                       }}
                     >
-                      {familiarMessageText.split(' ').reduce((acc, word, i, arr) => {
+                      {getMessageText(familiarMessageText).split(' ').reduce((acc, word, i, arr) => {
                         if (i === 0) return <span className="highlight-line">{word}</span>;
                         return (
                           <>
@@ -1030,7 +1077,7 @@ function MainApp() {
                         textAlign: 'center',
                       }}
                     >
-                      {newMessageAppearsText.split(' ').reduce((acc, word, i, arr) => {
+                      {getMessageText(newMessageAppearsText).split(' ').reduce((acc, word, i, arr) => {
                         if (i === 0) return <span className="highlight-line">{word}</span>;
                         return (
                           <>
@@ -1084,7 +1131,7 @@ function MainApp() {
                         textAlign: 'center',
                       }}
                     >
-                      {messageSentText.split(' ').reduce((acc, word, i, arr) => {
+                      {getMessageText(messageSentText).split(' ').reduce((acc, word, i, arr) => {
                         if (i === 0) return <span className="highlight-line">{word}</span>;
                         return (
                           <>
@@ -1396,7 +1443,7 @@ function MainApp() {
                   }}
                 >
                   <Typography variant="h6" sx={{ color: '#2c3e50' }}>
-                    {NARRATIVE_MESSAGES.SENDING_MESSAGE}
+                    {getMessageText(NARRATIVE_MESSAGES.SENDING_MESSAGE)}
                   </Typography>
                 </Box>
               </Fade>
@@ -1424,8 +1471,8 @@ function MainApp() {
                 }}
               >
                 {currentState === STATES.SHOW_MESSAGE ? 
-                  NARRATIVE_MESSAGES.PUT_BACK_BUTTON : 
-                  NARRATIVE_MESSAGES.CONTINUE_BUTTON}
+                  getMessageText(NARRATIVE_MESSAGES.PUT_BACK_BUTTON) : 
+                  getMessageText(NARRATIVE_MESSAGES.CONTINUE_BUTTON)}
               </Button>
             </Box>
           </Fade>
